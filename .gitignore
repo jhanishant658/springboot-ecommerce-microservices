@@ -18,9 +18,9 @@ Thumbs.db
 !.env.example
 
 # Application secrets (optional)
-application-local.properties
-application-dev.properties
-application-prod.properties
+**/application-local.properties
+**/application-dev.properties
+**/application-prod.properties
 
 # IntelliJ IDEA
 .idea/
