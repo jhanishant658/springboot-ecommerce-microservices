@@ -13,6 +13,8 @@ import Microservice.Eccomerce.Product_Service.Entity.Product;
 import Microservice.Eccomerce.Product_Service.Service.ProductService;
 import lombok.AllArgsConstructor;
 
+import org.springframework.data.domain.Page;
+
 @RestController
 @RequestMapping("/api/v1/products")
 @AllArgsConstructor
@@ -36,6 +38,11 @@ public class ProductController {
     ResponseEntity<String> saveAllProducts(@RequestBody @NonNull java.util.List<Product> products) {
         String response = productService.saveAllProducts(products);
         return ResponseEntity.ok(response);
+    }
+    @GetMapping("/category/{category}/{page}")
+    ResponseEntity<Page<Product>> findByCategory(@PathVariable String category , @PathVariable int page) {
+       Page<Product> products = productService.findByCategory(category, page);
+        return ResponseEntity.ok(products);
     }
     
 }

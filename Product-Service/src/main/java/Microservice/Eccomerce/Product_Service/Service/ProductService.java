@@ -2,12 +2,16 @@ package Microservice.Eccomerce.Product_Service.Service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import Microservice.Eccomerce.Product_Service.Entity.Product;
 import Microservice.Eccomerce.Product_Service.Repository.ProductRepo;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Pageable;
+
 
 /**
  * ProductService
@@ -28,7 +32,10 @@ public class ProductService {
   productRepo.saveAll(products);
   return "Products saved successfully";
  }
- 
+ public Page<Product> findByCategory(String category , int page){
+   Pageable pageable = PageRequest.of(page, 2);
+   return productRepo.findByCategory(category, pageable);
+ }
 
 
     
