@@ -3,6 +3,7 @@ package MicroService.ECommerce.CartService.Model;
 import java.util.List;
 
 import MicroService.ECommerce.CartService.Dto.Product;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,5 +21,7 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     
     private Long id;
+
+    @ElementCollection
     private List<Product> products;
 }

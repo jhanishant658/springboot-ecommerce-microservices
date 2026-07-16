@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CartService {
     
     private final CartRepository cartRepo ; 
+    // create cart if it does n't exist 
     public Cart createCart(long userId , Product product){
          Cart cart = new Cart();
         
@@ -26,7 +27,8 @@ public class CartService {
         cart.setProducts(new ArrayList<>(products));
          log.info("Creating cart for user with ID: {}", userId);
          return cartRepo.save(cart);
-    }    
+    }   
+    //Get all product of cart  
     public List<Product> getProductsByCartId(Long cartId) {
         Cart cart = cartRepo.findById(cartId).orElse(null);
         if (cart != null) {
@@ -34,6 +36,7 @@ public class CartService {
         }
         return null;
     }
+    // add product to cart if it exist else create new cart with product
     public Cart addProductToCart(Long cartId, Product product) {
         log.info("adding item in cart : {}", product);
         Cart cart = cartRepo.findById(cartId).orElse(null);
@@ -43,22 +46,41 @@ public class CartService {
                 products.add(product);
             }
             else {
-                log.info("Product already in cart : {} , update its quantity", product);
-                // Implement quantity update logic here
-                Product existingProduct = products.get(products.indexOf(product));
-                existingProduct.setQuantity(product.getQuantity());
-                log.info("Updated quantity for product : {}", existingProduct);
+                log.info("Product already in cart : {} ", product);
+                return cart; 
             }
             cart.setProducts(products);
             cartRepo.save(cart);
-
-            
         }
         log.warn("there is no cart for this id : {}",cartId);
         log.info("creating cart with product : {}",product);
 
 
         return createCart(cartId , product);
+    }
+    // update cart product and its quantiy
+    public Cart updateCart(Long cartId, List<Product> product) {
+      
+        Cart cart = cartRepo.findById(cartId).orElse(null);
+        if (cart != null) {
+            cart.setProducts(product);
+            return cartRepo.save(cart);
+        }
+        log.warn("there is no cart for this id : {}",cartId);
+        log.info("creating cart with product : {}",product);
+
+        return createCart(cartId , product.get(0));
+    }
+    // delete products from cart when order successful
+    public Cart deleteProducts(long cartId){
+        
+        Cart cart = cartRepo.findById(cartId).orElse(null);
+        if (cart != null) {
+            cart.setProducts(new ArrayList<>());
+            return cartRepo.save(cart);
+        }
+        log.warn("there is no cart for this id : {}",cartId);
+        return null;
     }
 
 
