@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import MicroService.ECommerce.OrderService.Repository.OrderRepo;
 import MicroService.ECommerce.OrderService.Request.PlaceOrderRequest;
+import MicroService.ECommerce.OrderService.Client.CartService;
 import MicroService.ECommerce.OrderService.Model.Order;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,12 +16,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class OrderService {
   private final OrderRepo orderRepo ;
-
+  private final CartService cartService ;
   public Order PlaceOrder(long userId) {
     Order order = new Order();
-    //change this 22th line to 23
-    PlaceOrderRequest req = new PlaceOrderRequest();
-    //PlaceOrderRequest req = cartService.placeOrderDetail(long userId);  
+    PlaceOrderRequest req = cartService.placeOrderDetails(userId);  
     order.setUserId(req.getUserId());
     order.setProducts(req.getProducts());
     order.setTotalAmount(req.getTotalAmount());
