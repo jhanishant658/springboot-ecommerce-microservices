@@ -5,9 +5,12 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import MicroService.ECommerce.CartService.Dto.Product;
 import MicroService.ECommerce.CartService.Model.Cart;
 import MicroService.ECommerce.CartService.Repository.CartRepository;
+import MicroService.ECommerce.ClientRequest.PlaceOrderRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,6 +21,7 @@ public class CartService {
     
     private final CartRepository cartRepo ; 
     // create cart if it does n't exist 
+    @Transactional
     public Cart createCart(long userId , Product product){
          Cart cart = new Cart();
         
@@ -37,6 +41,7 @@ public class CartService {
         return null;
     }
     // add product to cart if it exist else create new cart with product
+    @Transactional
     public Cart addProductToCart(Long cartId, Product product) {
         log.info("adding item in cart : {}", product);
         Cart cart = cartRepo.findById(cartId).orElse(null);
@@ -50,7 +55,7 @@ public class CartService {
                 return cart; 
             }
             cart.setProducts(products);
-            cartRepo.save(cart);
+           return cartRepo.save(cart);
         }
         log.warn("there is no cart for this id : {}",cartId);
         log.info("creating cart with product : {}",product);
@@ -80,6 +85,18 @@ public class CartService {
             return cartRepo.save(cart);
         }
         log.warn("there is no cart for this id : {}",cartId);
+        return null;
+    }
+    public PlaceOrderRequest getCartDetailsForOrder(long userId) {
+        Cart cart = cartRepo.findById(userId).orElse(null);
+        if (cart != null) {
+            List<Product> products = cart.getProducts();
+            long totalAmount = products.stream()
+                    .mapToLong(product -> product.getPrice() * product.getQuantity())
+                    .sum();
+            return new PlaceOrderRequest(userId, products, totalAmount);
+        }
+        log.warn("there is no cart for this user id : {}",userId);
         return null;
     }
 

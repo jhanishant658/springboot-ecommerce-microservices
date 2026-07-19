@@ -13,4 +13,5 @@ import jakarta.persistence.Embeddable;
 public class Product {
     private Long id;
     private Long quantity;
+    private Long price ; 
 }
