@@ -11,6 +11,6 @@ import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class Product {
-    private String productId ; 
-    private String quantity ;
+    private Long id;
+    private Long quantity;
 }
