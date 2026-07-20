@@ -1,4 +1,4 @@
-package MicroService.ECommerce.ClientRequest;
+package MicroService.ECommerce.CartService.ClientRequest;
 
 import java.util.List;
 

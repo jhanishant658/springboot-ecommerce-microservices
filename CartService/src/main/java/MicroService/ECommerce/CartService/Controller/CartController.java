@@ -10,10 +10,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import MicroService.ECommerce.CartService.Dto.CartProduct;
 import MicroService.ECommerce.CartService.Dto.Product;
 import MicroService.ECommerce.CartService.Model.Cart;
 import MicroService.ECommerce.CartService.Service.CartService;
-import MicroService.ECommerce.ClientRequest.PlaceOrderRequest;
+import MicroService.ECommerce.CartService.ClientRequest.PlaceOrderRequest;
 import lombok.AllArgsConstructor;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -41,7 +42,7 @@ public class CartController {
         return ResponseEntity.ok(updatedCart);
     }
     @GetMapping("getCart")
-    public List<Product> getCart(@RequestParam Long cartId) {
+    public List<CartProduct> getCart(@RequestParam Long cartId) {
         return cartService.getProductsByCartId(cartId);
     }
     @GetMapping("/{userId}/")

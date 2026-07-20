@@ -7,10 +7,12 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.transaction.annotation.Transactional;
 
+import MicroService.ECommerce.CartService.Dto.CartProduct;
 import MicroService.ECommerce.CartService.Dto.Product;
 import MicroService.ECommerce.CartService.Model.Cart;
 import MicroService.ECommerce.CartService.Repository.CartRepository;
-import MicroService.ECommerce.ClientRequest.PlaceOrderRequest;
+import MicroService.ECommerce.CartService.Client.ProductService;
+import MicroService.ECommerce.CartService.ClientRequest.PlaceOrderRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CartService {
     
     private final CartRepository cartRepo ; 
+    private final ProductService productService ;
     // create cart if it does n't exist 
     @Transactional
     public Cart createCart(long userId , Product product){
@@ -33,10 +36,13 @@ public class CartService {
          return cartRepo.save(cart);
     }   
     //Get all product of cart  
-    public List<Product> getProductsByCartId(Long cartId) {
+    public List<CartProduct> getProductsByCartId(Long cartId) {
         Cart cart = cartRepo.findById(cartId).orElse(null);
         if (cart != null) {
-            return cart.getProducts();
+           List<Long> productIds = cart.getProducts().stream()
+                    .map(Product::getId)
+                    .toList();
+            return productService.getProductsByIds(productIds);
         }
         return null;
     }
