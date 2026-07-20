@@ -38,7 +38,22 @@ public class ProductService {
    return productRepo.findByCategory(category, pageable);
  }
  public List<CartProduct> getCartProducts(@NonNull List<Long> productIds) {
-    return productRepo.findByIdIn(productIds);
+    List<Product> products = productRepo.findByIdIn(productIds);
+
+return products.stream()
+        .map(p -> new CartProduct(
+                p.getId(),
+                p.getTitle(),
+                p.getRating(),
+                p.getPrice(),
+                p.getDiscountPrice(),
+                p.getThumbnail()
+        ))
+        .toList();
+ }
+ public Page<Product> getAllProducts(int page, int size) {
+    Pageable pageable = PageRequest.of(page, size);
+    return productRepo.findAll(pageable);
  }
 
 

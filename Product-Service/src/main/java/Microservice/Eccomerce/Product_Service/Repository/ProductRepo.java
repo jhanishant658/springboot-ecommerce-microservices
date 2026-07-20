@@ -7,7 +7,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.lang.NonNull;
 
-import Microservice.Eccomerce.Product_Service.ClientRequest.CartProduct;
 import Microservice.Eccomerce.Product_Service.Entity.Product;
 import org.springframework.data.domain.Page;
 
@@ -17,6 +16,6 @@ public interface ProductRepo extends JpaRepository< Product , Long> {
 
     Page<Product> findByCategory(String category, Pageable pageable);
 
-    List<CartProduct> findByIdIn(List<Long> productIds);
+    List<Product> findByIdIn(List<Long> productIds);
 
 }

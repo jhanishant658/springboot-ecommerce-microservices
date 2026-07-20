@@ -41,7 +41,7 @@ public class CartController {
         Cart updatedCart = cartService.updateCart(cartId, product);
         return ResponseEntity.ok(updatedCart);
     }
-    @GetMapping("getCart")
+    @PostMapping("getCart")
     public List<CartProduct> getCart(@RequestParam Long cartId) {
         return cartService.getProductsByCartId(cartId);
     }

@@ -47,8 +47,13 @@ public class ProductController {
        Page<Product> products = productService.findByCategory(category, page);
         return ResponseEntity.ok(products);
     }
-    @PostMapping("/api/v1/products/getProducts")
+    @PostMapping("getProducts")
       List<CartProduct> getProductsByIds(@RequestBody @NonNull List<Long> productIds){
         return productService.getCartProducts(productIds);
       }
+      @GetMapping("/all/{page}/{size}")
+        ResponseEntity<Page<Product>> getAllProducts(@PathVariable int page, @PathVariable int size) {
+            Page<Product> products = productService.getAllProducts(page, size);
+            return ResponseEntity.ok(products);
+        }
 }
