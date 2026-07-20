@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
+import Microservice.Eccomerce.Product_Service.ClientRequest.CartProduct;
 import Microservice.Eccomerce.Product_Service.Entity.Product;
 import Microservice.Eccomerce.Product_Service.Repository.ProductRepo;
 import lombok.AllArgsConstructor;
@@ -35,6 +36,9 @@ public class ProductService {
  public Page<Product> findByCategory(String category , int page){
    Pageable pageable = PageRequest.of(page, 2);
    return productRepo.findByCategory(category, pageable);
+ }
+ public List<CartProduct> getCartProducts(@NonNull List<Long> productIds) {
+    return productRepo.findByIdIn(productIds);
  }
 
 

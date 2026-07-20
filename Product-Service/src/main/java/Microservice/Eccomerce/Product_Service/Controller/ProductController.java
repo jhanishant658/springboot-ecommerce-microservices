@@ -9,9 +9,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import Microservice.Eccomerce.Product_Service.ClientRequest.CartProduct;
 import Microservice.Eccomerce.Product_Service.Entity.Product;
 import Microservice.Eccomerce.Product_Service.Service.ProductService;
 import lombok.AllArgsConstructor;
+
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 
@@ -44,5 +47,8 @@ public class ProductController {
        Page<Product> products = productService.findByCategory(category, page);
         return ResponseEntity.ok(products);
     }
-    
+    @PostMapping("/api/v1/products/getProducts")
+      List<CartProduct> getProductsByIds(@RequestBody @NonNull List<Long> productIds){
+        return productService.getCartProducts(productIds);
+      }
 }
