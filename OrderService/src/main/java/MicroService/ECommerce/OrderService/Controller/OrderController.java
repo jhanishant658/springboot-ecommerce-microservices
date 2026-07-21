@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import MicroService.ECommerce.OrderService.Model.Order;
 
 import MicroService.ECommerce.OrderService.Service.OrderService;
-
+import MicroService.ECommerce.Response.OrderDetail;
 import lombok.AllArgsConstructor;
 
 /**
@@ -37,7 +37,7 @@ public class OrderController {
        return orderService.updateOrderStatus(orderId, status);
    }
    @GetMapping("/getOrderDetails/{orderId}")
-   public Order getOrderById(@PathVariable long orderId) {
+   public OrderDetail getOrderById(@PathVariable long orderId) {
        return orderService.getOrderById(orderId);
    }
     
