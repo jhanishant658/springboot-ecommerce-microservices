@@ -8,12 +8,16 @@ Spring Boot microservices project for a scalable ecommerce backend. It uses Eure
 | --- | ---: | --- |
 | discovery-server | 8761 | Eureka service registry |
 | api-gateway | 8080 | Routes client requests to services |
-| user-service | 8081 | Registration, login, JWT, profile management |
-| product-catalog-service | 8082 | Products, categories, inventory |
-| cart-service | 8083 | Shopping cart item management |
-| order-service | 8084 | Order placement, status, order history |
-| payment-service | 8085 | Internal wallet-based payments |
-| notification-service | 8086 | Email/SMS-style notification records |
+| user-service | 0   | Registration, login, JWT, profile management |
+| product-service | 0 | Products, categories, inventory |
+| cart-service | 0 | Shopping cart item management |
+| order-service | 0 | Order placement, status, order history |
+| payment-service | 0 | Internal wallet-based payments |
+| notification-service | 0 | Email/SMS-style notification records |
+## Service ports are set to 0.
+- for making multiple instance of each service
+- port 0 means assign random port which is free
+- it helps in Load Balancing
 
 ## What Is Included
 
@@ -25,6 +29,7 @@ Spring Boot microservices project for a scalable ecommerce backend. It uses Eure
 - PostgreSQL configuration per service using environment variables.
 - Wallet payment flow without Stripe, PayPal, Redis, or Kafka.
 - GitHub-ready `.gitignore` and `.env.example`.
+- Load Balancing in each services
 
 ## Database Setup
 
