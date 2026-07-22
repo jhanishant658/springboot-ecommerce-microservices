@@ -8,7 +8,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import MicroService.ECommerce.OrderService.Request.CartProduct;
 
-@FeignClient
+@FeignClient(name ="product-service")
+
 public interface ProductService {
     @PostMapping("/api/v1/products/getProducts")
     List<CartProduct> getProductsByIds(@RequestBody List<Long> productIds);

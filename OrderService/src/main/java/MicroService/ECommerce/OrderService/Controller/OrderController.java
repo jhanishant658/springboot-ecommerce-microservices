@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import MicroService.ECommerce.OrderService.Model.Order;
 
 import MicroService.ECommerce.OrderService.Service.OrderService;
-import MicroService.ECommerce.Response.OrderDetail;
+import MicroService.ECommerce.OrderService.Res.OrderDetail;
 import lombok.AllArgsConstructor;
 
 /**

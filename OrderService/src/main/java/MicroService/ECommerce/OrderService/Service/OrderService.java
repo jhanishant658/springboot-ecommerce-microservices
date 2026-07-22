@@ -2,14 +2,16 @@ package MicroService.ECommerce.OrderService.Service;
 
 import java.util.List;
 
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import MicroService.ECommerce.OrderService.Repository.OrderRepo;
 import MicroService.ECommerce.OrderService.Request.CartProduct;
 import MicroService.ECommerce.OrderService.Request.PlaceOrderRequest;
-import MicroService.ECommerce.Response.OrderDetail;
+import MicroService.ECommerce.OrderService.Res.OrderDetail;
 import MicroService.ECommerce.OrderService.Client.CartService;
 import MicroService.ECommerce.OrderService.Client.ProductService;
+import MicroService.ECommerce.OrderService.Events.OrderPlaceEvent;
 import MicroService.ECommerce.OrderService.Model.Order;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,15 +23,25 @@ public class OrderService {
   private final OrderRepo orderRepo ;
   private final CartService cartService ;
   private final ProductService productService ;
+  private final KafkaTemplate<String, OrderPlaceEvent> kafkaTemplate ;
   public Order PlaceOrder(long userId) {
     Order order = new Order();
-    PlaceOrderRequest req = cartService.placeOrderDetails(userId);  
+   // PlaceOrderRequest req = cartService.placeOrderDetails(userId);  
+   PlaceOrderRequest req = new PlaceOrderRequest(
+     
+   );
+req.setUserId(userId);
+req.setProducts(null);
+req.setTotalAmount(0);
     order.setUserId(req.getUserId());
     order.setProducts(req.getProducts());
     order.setTotalAmount(req.getTotalAmount());
     order.setStatus("Placed");
     order.setDate(java.time.LocalDateTime.now());
-    return orderRepo.save(order);
+     orderRepo.save(order);
+     kafkaTemplate.send("order-placed", new OrderPlaceEvent(order.getUserId()));
+     log.info("Order placed event sent to Kafka for userId: {}", order.getUserId());
+     return order ; 
   }
   // this method help to get user order history
   public List<Order> getOrdersByUserId(long userId) {
