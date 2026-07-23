@@ -3,12 +3,15 @@ package MicroService.ECommerce.CartService.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import org.springframework.transaction.annotation.Transactional;
 
 import MicroService.ECommerce.CartService.Dto.CartProduct;
 import MicroService.ECommerce.CartService.Dto.Product;
+
+import MicroService.ECommerce.CartService.Events.OrderEvents;
 import MicroService.ECommerce.CartService.Model.Cart;
 import MicroService.ECommerce.CartService.Repository.CartRepository;
 import MicroService.ECommerce.CartService.Client.ProductService;
@@ -82,16 +85,21 @@ public class CartService {
 
         return createCart(cartId , product.get(0));
     }
-    // delete products from cart when order successful
-    public Cart deleteProducts(long cartId){
-        
+   @KafkaListener(topics = "order-events", groupId = "cart-group")
+    public void deleteProducts(OrderEvents event){
+        if ("ORDER_PLACED".equals(event.eventType())){
+            long cartId = event.userId();
         Cart cart = cartRepo.findById(cartId).orElse(null);
         if (cart != null) {
             cart.setProducts(new ArrayList<>());
-            return cartRepo.save(cart);
+            cartRepo.save(cart);
+            log.info("cart cleared successfully");
+            return ; 
         }
         log.warn("there is no cart for this id : {}",cartId);
-        return null;
+        
+    }
+
     }
     public PlaceOrderRequest getCartDetailsForOrder(long userId) {
         Cart cart = cartRepo.findById(userId).orElse(null);

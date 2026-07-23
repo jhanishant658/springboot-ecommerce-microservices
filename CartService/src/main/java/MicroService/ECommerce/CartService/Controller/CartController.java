@@ -49,12 +49,7 @@ public class CartController {
     public PlaceOrderRequest placeOrderDetails(@PathVariable("userId") long userId){
         return cartService.getCartDetailsForOrder(userId);
     }
-    @DeleteMapping("/removeProduct")
-    public ResponseEntity<Cart> removeProductFromCart(@RequestParam Long cartId) {
-        Cart updatedCart = cartService.deleteProducts(cartId);
-        return ResponseEntity.ok(updatedCart);
-    }
-    
+   
 
     
 }
