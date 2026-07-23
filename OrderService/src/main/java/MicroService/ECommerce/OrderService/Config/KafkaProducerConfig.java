@@ -10,9 +10,12 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JsonSerializer;
+
+import MicroService.ECommerce.OrderService.Events.OrderEvents;
+
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.config.SslConfigs;
-import MicroService.ECommerce.OrderService.Events.OrderPlaceEvent;
+
 
 
 import java.util.HashMap;
@@ -44,7 +47,7 @@ private String truststoreType;
 private String truststorePassword;
 
     @Bean
-    public ProducerFactory<String, OrderPlaceEvent> producerFactory() {
+    public ProducerFactory<String, OrderEvents> producerFactory() {
 
         Map<String, Object> config = new HashMap<>();
 
@@ -71,7 +74,7 @@ config.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, truststoreType);
     }
 
     @Bean
-    public KafkaTemplate<String, OrderPlaceEvent> kafkaTemplate() {
+    public KafkaTemplate<String, OrderEvents> kafkaTemplate() {
 
         return new KafkaTemplate<>(producerFactory());
 

@@ -11,8 +11,11 @@ import MicroService.ECommerce.OrderService.Request.PlaceOrderRequest;
 import MicroService.ECommerce.OrderService.Res.OrderDetail;
 import MicroService.ECommerce.OrderService.Client.CartService;
 import MicroService.ECommerce.OrderService.Client.ProductService;
-import MicroService.ECommerce.OrderService.Events.OrderPlaceEvent;
+import MicroService.ECommerce.OrderService.Events.EventType;
+import MicroService.ECommerce.OrderService.Events.OrderEvents;
+
 import MicroService.ECommerce.OrderService.Model.Order;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,7 +26,7 @@ public class OrderService {
   private final OrderRepo orderRepo ;
   private final CartService cartService ;
   private final ProductService productService ;
-  private final KafkaTemplate<String, OrderPlaceEvent> kafkaTemplate ;
+  private final KafkaTemplate<String, OrderEvents> kafkaTemplate ;
   public Order PlaceOrder(long userId) {
     Order order = new Order();
    // PlaceOrderRequest req = cartService.placeOrderDetails(userId);  
@@ -36,10 +39,17 @@ req.setTotalAmount(0);
     order.setUserId(req.getUserId());
     order.setProducts(req.getProducts());
     order.setTotalAmount(req.getTotalAmount());
-    order.setStatus("Placed");
+    order.setStatus("PLACED");
     order.setDate(java.time.LocalDateTime.now());
      orderRepo.save(order);
-     kafkaTemplate.send("order-placed", new OrderPlaceEvent(order.getUserId()));
+     OrderEvents events = new OrderEvents(
+      order.getId() ,
+      userId,
+      EventType.ORDER_PLACED,
+      order.getStatus(),
+      order.getDate()
+     );
+     kafkaTemplate.send("order-events", events);
      log.info("Order placed event sent to Kafka for userId: {}", order.getUserId());
      return order ; 
   }
