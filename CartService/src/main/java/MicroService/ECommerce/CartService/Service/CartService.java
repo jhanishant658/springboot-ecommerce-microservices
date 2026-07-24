@@ -12,6 +12,8 @@ import MicroService.ECommerce.CartService.Dto.CartProduct;
 import MicroService.ECommerce.CartService.Dto.Product;
 
 import MicroService.ECommerce.CartService.Events.OrderEvents;
+
+import MicroService.ECommerce.CartService.Events.EventType;
 import MicroService.ECommerce.CartService.Model.Cart;
 import MicroService.ECommerce.CartService.Repository.CartRepository;
 import MicroService.ECommerce.CartService.Client.ProductService;
@@ -85,9 +87,11 @@ public class CartService {
 
         return createCart(cartId , product.get(0));
     }
-   @KafkaListener(topics = "order-events", groupId = "cart-group")
+   @KafkaListener(topics = "order-placed", groupId = "cart-group")
     public void deleteProducts(OrderEvents event){
-        if ("ORDER_PLACED".equals(event.eventType())){
+        log.info("event recieved:{}",event);
+        if (event.eventType()==EventType.ORDER_PLACED){
+        log.info("event type matched");
             long cartId = event.userId();
         Cart cart = cartRepo.findById(cartId).orElse(null);
         if (cart != null) {

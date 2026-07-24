@@ -56,7 +56,7 @@ public class KafkaConsumerConfig {
 
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
                 JsonDeserializer.class);
-
+        config.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
         config.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
 
         // SSL Configuration
