@@ -49,8 +49,17 @@ req.setTotalAmount(0);
       order.getStatus(),
       order.getDate()
      );
-     kafkaTemplate.send("order-events", events);
-     log.info("Order placed event sent to Kafka for userId: {}", order.getUserId());
+
+     try {
+    var result = kafkaTemplate.send("order-placed", events).get();
+
+log.info("Topic     : {}", result.getRecordMetadata().topic());
+log.info("Partition : {}", result.getRecordMetadata().partition());
+log.info("Offset    : {}", result.getRecordMetadata().offset());
+    log.info("Kafka send SUCCESS");
+} catch (Exception e) {
+    e.printStackTrace();
+}
      return order ; 
   }
   // this method help to get user order history

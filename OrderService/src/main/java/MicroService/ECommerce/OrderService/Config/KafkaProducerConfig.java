@@ -58,6 +58,7 @@ config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
 
 config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
         JsonSerializer.class);
+        config.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, false);
 
 // SSL Configuration
 config.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, securityProtocol);
