@@ -2,6 +2,7 @@ package MicroService.ECommerce.OrderService.Service;
 
 import java.util.List;
 
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +12,7 @@ import MicroService.ECommerce.OrderService.Request.PlaceOrderRequest;
 import MicroService.ECommerce.OrderService.Res.OrderDetail;
 //import MicroService.ECommerce.OrderService.Client.CartService;
 import MicroService.ECommerce.OrderService.Client.ProductService;
+import MicroService.ECommerce.OrderService.Events.CartEvent;
 import MicroService.ECommerce.OrderService.Events.EventType;
 import MicroService.ECommerce.OrderService.Events.OrderEvents;
 
@@ -39,13 +41,14 @@ req.setTotalAmount(0);
     order.setUserId(req.getUserId());
     order.setProducts(req.getProducts());
     order.setTotalAmount(req.getTotalAmount());
-    order.setStatus("PLACED");
+    order.setStatus("PENDING");
     order.setDate(java.time.LocalDateTime.now());
      orderRepo.save(order);
+     log.info("order placed with default data");
      OrderEvents events = new OrderEvents(
       order.getId() ,
       userId,
-      EventType.ORDER_PLACED,
+      EventType.ORDER_PENDING,
       order.getStatus(),
       order.getDate()
      );
@@ -60,7 +63,7 @@ log.info("Offset    : {}", result.getRecordMetadata().offset());
 } catch (Exception e) {
     e.printStackTrace();
 }
-     return order ; 
+  return order ; 
   }
   // this method help to get user order history
   public List<Order> getOrdersByUserId(long userId) {
@@ -96,6 +99,38 @@ log.info("Offset    : {}", result.getRecordMetadata().offset());
     }
     return orderDetail ; 
   }
+  @KafkaListener(topics ="cart-event",groupId = "order-group", containerFactory = "kafkaListenerContainerFactory")
+public void PlaceOrderFromCart(CartEvent event){
+  log.info("placing the order with actual data");
+       long orderId = event.orderId();
+       PlaceOrderRequest req = event.placeOrderReq();
+       Order order =  orderRepo.findById(orderId).orElse(null);
+        order.setUserId(req.getUserId());
+    order.setProducts(req.getProducts());
+    order.setTotalAmount(req.getTotalAmount());
+    order.setStatus("PLACED");
+    order.setDate(java.time.LocalDateTime.now());
+    orderRepo.save(order);
+     OrderEvents events = new OrderEvents(
+      order.getId() ,
+      order.getUserId(),
+      EventType.ORDER_PLACED,
+      order.getStatus(),
+      order.getDate()
+     );
 
+     try {
+    var result = kafkaTemplate.send("order-placed", events).get();
+
+log.info("Topic     : {}", result.getRecordMetadata().topic());
+log.info("Partition : {}", result.getRecordMetadata().partition());
+log.info("Offset    : {}", result.getRecordMetadata().offset());
+    log.info("Kafka send SUCCESS");
+} catch (Exception e) {
+    e.printStackTrace();
+}
+
+
+}
     
 }

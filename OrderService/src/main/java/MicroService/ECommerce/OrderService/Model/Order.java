@@ -13,7 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import jakarta.persistence.ElementCollection;
-
+import jakarta.persistence.FetchType;
 @Entity
 @Data
 @NoArgsConstructor
@@ -24,7 +24,7 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id ;
     private long userId ;
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     private List<Product> products;
     private long totalAmount ;
     private String status ;
