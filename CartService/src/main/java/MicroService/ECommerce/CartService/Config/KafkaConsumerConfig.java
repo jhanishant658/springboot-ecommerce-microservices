@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -50,14 +50,13 @@ public class KafkaConsumerConfig {
 
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         config.put(ConsumerConfig.GROUP_ID_CONFIG, "cart-group");
+        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
                 StringDeserializer.class);
 
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                JsonDeserializer.class);
-        config.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
-        config.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
+                JacksonJsonDeserializer.class);
 
         // SSL Configuration
         config.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, securityProtocol);
@@ -70,11 +69,17 @@ public class KafkaConsumerConfig {
         config.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, truststorePassword);
         config.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, truststoreType);
 
-        return new DefaultKafkaConsumerFactory<>(
-                config,
-                new StringDeserializer(),
-                new JsonDeserializer<>(OrderEvents.class)
-        );
+       JacksonJsonDeserializer<OrderEvents> deserializer =
+        new JacksonJsonDeserializer<>(OrderEvents.class);
+
+deserializer.addTrustedPackages("*");
+deserializer.setUseTypeHeaders(false);
+
+return new DefaultKafkaConsumerFactory<>(
+        config,
+        new StringDeserializer(),
+        deserializer
+);
     }
 
     @Bean

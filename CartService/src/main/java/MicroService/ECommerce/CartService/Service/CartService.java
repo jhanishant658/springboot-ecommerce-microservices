@@ -87,14 +87,15 @@ public class CartService {
 
         return createCart(cartId , product.get(0));
     }
-   @KafkaListener(topics = "order-placed", groupId = "cart-group")
+   @KafkaListener(topics = "order-placed", groupId = "cart-group", containerFactory = "kafkaListenerContainerFactory")
     public void deleteProducts(OrderEvents event){
+        log.info("function run start");
         log.info("event recieved:{}",event);
         if (event.eventType()==EventType.ORDER_PLACED){
         log.info("event type matched");
             long cartId = event.userId();
         Cart cart = cartRepo.findById(cartId).orElse(null);
-        if (cart != null) {
+        if (cart != null&&!cart.getProducts().isEmpty()) {
             cart.setProducts(new ArrayList<>());
             cartRepo.save(cart);
             log.info("cart cleared successfully");
