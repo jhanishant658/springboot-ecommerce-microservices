@@ -9,7 +9,7 @@ import MicroService.ECommerce.OrderService.Repository.OrderRepo;
 import MicroService.ECommerce.OrderService.Request.CartProduct;
 import MicroService.ECommerce.OrderService.Request.PlaceOrderRequest;
 import MicroService.ECommerce.OrderService.Res.OrderDetail;
-import MicroService.ECommerce.OrderService.Client.CartService;
+//import MicroService.ECommerce.OrderService.Client.CartService;
 import MicroService.ECommerce.OrderService.Client.ProductService;
 import MicroService.ECommerce.OrderService.Events.EventType;
 import MicroService.ECommerce.OrderService.Events.OrderEvents;
@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class OrderService {
   private final OrderRepo orderRepo ;
-  private final CartService cartService ;
+ // private final CartService cartService ;
   private final ProductService productService ;
   private final KafkaTemplate<String, OrderEvents> kafkaTemplate ;
   public Order PlaceOrder(long userId) {

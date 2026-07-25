@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
-import org.springframework.kafka.support.serializer.JsonSerializer;
+import org.springframework.kafka.support.serializer.JacksonJsonSerializer;
 
 import MicroService.ECommerce.OrderService.Events.OrderEvents;
 
@@ -57,8 +57,8 @@ config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
         StringSerializer.class);
 
 config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-        JsonSerializer.class);
-        config.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, false);
+        JacksonJsonSerializer.class);
+        config.put(JacksonJsonSerializer.ADD_TYPE_INFO_HEADERS, false);
 
 // SSL Configuration
 config.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, securityProtocol);
