@@ -14,11 +14,9 @@ import MicroService.ECommerce.CartService.Dto.CartProduct;
 import MicroService.ECommerce.CartService.Dto.Product;
 import MicroService.ECommerce.CartService.Model.Cart;
 import MicroService.ECommerce.CartService.Service.CartService;
-import MicroService.ECommerce.CartService.ClientRequest.PlaceOrderRequest;
+
 import lombok.AllArgsConstructor;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 
 
 /**
@@ -44,10 +42,7 @@ public class CartController {
     public List<CartProduct> getCart(@RequestParam Long cartId) {
         return cartService.getProductsByCartId(cartId);
     }
-    @GetMapping("/{userId}/")
-    public PlaceOrderRequest placeOrderDetails(@PathVariable("userId") long userId){
-        return cartService.getCartDetailsForOrder(userId);
-    }
+
    
 
     

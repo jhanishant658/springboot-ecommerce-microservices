@@ -49,7 +49,7 @@ public class KafkaConsumerConfig {
         Map<String, Object> config = new HashMap<>();
 
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        config.put(ConsumerConfig.GROUP_ID_CONFIG, "cart-group");
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, "order-group");
         config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
