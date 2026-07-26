@@ -26,11 +26,11 @@ public class OrderEventListener {
     private final NotificationService notificationService;
 
     @KafkaListener(topics = "order-placed", groupId = "notification-group", containerFactory = "kafkaListenerContainerFactory")
-    public void onOrderEvent(OrderEvents event) {
+    private void onOrderEvent(OrderEvents event) {
         log.info("Received order event: orderId={}, userId={}, eventType={}, status={}",
                 event.orderId(), event.userId(), event.eventType(), event.status());
 
-        String recipient = resolveEmail(event.userId());
+        String recipient = event.email();
         if (recipient == null) {
             log.warn("No email resolved for userId={}, skipping notification for orderId={}",
                     event.userId(), event.orderId());
@@ -49,6 +49,7 @@ public class OrderEventListener {
             case ORDER_PLACED -> "Your order #" + event.orderId() + " has been placed";
             case ORDER_CANCELLED -> "Your order #" + event.orderId() + " has been cancelled";
             case ORDER_PENDING -> "Your order #" + event.orderId() + " is pending";
+             default -> "Not Sure about it ";
         };
     }
 
@@ -56,13 +57,35 @@ public class OrderEventListener {
         return "Hi,<br><br>Your order <b>#" + event.orderId() + "</b> status is now: <b>"
                 + event.status() + "</b>.<br><br>Thanks for shopping with us.";
     }
+    private void onOrderStatusChange(OrderEvents event){
+         log.info("Received order event: orderId={}, userId={}, eventType={}, status={}",
+                event.orderId(), event.userId(), event.eventType(), event.status());
 
-    /**
-     * TODO(you): replace with a real userId -> email lookup, e.g. a Feign call
-     * to UserService once it exposes a by-id endpoint, or read the email
-     * straight off an enriched OrderEvents payload.
-     */
-    private String resolveEmail(Long userId) {
-        return null;
+        String recipient = event.email();
+        if (recipient == null) {
+            log.warn("No email resolved for userId={}, skipping notification for orderId={}",
+                    event.userId(), event.orderId());
+            return;
+        }
+
+        String subject = "Order Status updated Successfully";
+        String body = bodyFor(event);
+
+        notificationService.send(new NotificationDtos.NotificationRequest(
+                event.userId(), recipient, Notification.Channel.EMAIL, subject, body));
     }
+    @KafkaListener(topics = "order-placed", groupId = "notification-group", containerFactory = "kafkaListenerContainerFactory")
+    public void KafkaListnerOfOrderService(OrderEvents event){
+        switch(event.eventType()){
+            case ORDER_PLACED :
+                onOrderEvent(event);
+                break;
+            case ORDER_STATUS_UPDATED:
+                onOrderStatusChange(event);
+                break ; 
+            default :
+               break ; 
+        }
+    }
+    
 }
