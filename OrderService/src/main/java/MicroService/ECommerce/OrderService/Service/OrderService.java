@@ -10,7 +10,6 @@ import MicroService.ECommerce.OrderService.Repository.OrderRepo;
 import MicroService.ECommerce.OrderService.Request.CartProduct;
 import MicroService.ECommerce.OrderService.Request.PlaceOrderRequest;
 import MicroService.ECommerce.OrderService.Res.OrderDetail;
-//import MicroService.ECommerce.OrderService.Client.CartService;
 import MicroService.ECommerce.OrderService.Client.ProductService;
 import MicroService.ECommerce.OrderService.Events.CartEvent;
 import MicroService.ECommerce.OrderService.Events.EventType;
@@ -31,7 +30,6 @@ public class OrderService {
   private final KafkaTemplate<String, OrderEvents> kafkaTemplate ;
   public Order PlaceOrder(long userId) {
     Order order = new Order();
-   // PlaceOrderRequest req = cartService.placeOrderDetails(userId);  
    PlaceOrderRequest req = new PlaceOrderRequest(
      
    );
@@ -48,6 +46,7 @@ req.setTotalAmount(0);
      OrderEvents events = new OrderEvents(
       order.getId() ,
       userId,
+      "njha5901@gmail.com",
       EventType.ORDER_PENDING,
       order.getStatus(),
       order.getDate()
@@ -71,12 +70,31 @@ log.info("Offset    : {}", result.getRecordMetadata().offset());
   }
 // this method help you to update the status of specific order  
   public String updateOrderStatus(long orderId, String status) {
+    log.info("order update req iniatlized");
     Order order = orderRepo.findById(orderId).orElse(null);
     if (order == null) {
         return "Order not found";
     }
     order.setStatus(status);
     orderRepo.save(order);
+    OrderEvents events = new OrderEvents(
+      order.getId() ,
+      order.getUserId(),
+      "njha5901@gmail.com",
+      EventType.ORDER_STATUS_UPDATED,
+      order.getStatus(),
+      order.getDate()
+     );
+    try {
+    var result = kafkaTemplate.send("order-placed", events).get();
+
+log.info("Topic     : {}", result.getRecordMetadata().topic());
+log.info("Partition : {}", result.getRecordMetadata().partition());
+log.info("Offset    : {}", result.getRecordMetadata().offset());
+    log.info("Kafka send SUCCESS");
+} catch (Exception e) {
+    e.printStackTrace();
+}
     return "Order status updated successfully";
   }
   // this method help you to find the detail of specific order
@@ -114,6 +132,7 @@ public void PlaceOrderFromCart(CartEvent event){
      OrderEvents events = new OrderEvents(
       order.getId() ,
       order.getUserId(),
+      "njha5901@gmail.com",
       EventType.ORDER_PLACED,
       order.getStatus(),
       order.getDate()
