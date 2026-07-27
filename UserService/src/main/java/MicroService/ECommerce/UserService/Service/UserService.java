@@ -3,7 +3,7 @@ package MicroService.ECommerce.UserService.Service;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import java.security.SecureRandom;
 import MicroService.ECommerce.UserService.Dto.UserDto;
 import MicroService.ECommerce.UserService.Entity.User;
 import MicroService.ECommerce.UserService.Repository.UserRepository;
@@ -17,22 +17,29 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
-
+    private final RedisService redisService;
     @Transactional
-    public UserDto.AuthResponse signup(UserDto.SignupRequest request) {
+    public UserDto.SignupResponse signup(UserDto.SignupRequest request) {
         if (userRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("Email already registered");
         }
-        User user =  User.builder()
-                .userName(request.userName())
-                .email(request.email())
-                .password(passwordEncoder.encode(request.password()))
-                .phone(request.phone())
-                .address(request.address())
-                
-                .build();
-        User saved = userRepository.save(user);
-        return new UserDto.AuthResponse(jwtTokenProvider.createToken(saved), toResponse(saved));
+       User user = User.builder()
+        .userName(request.userName())
+        .email(request.email())
+        .password(passwordEncoder.encode(request.password()))
+        .phone(request.phone())
+        .address(request.address())
+        .build();
+
+long otp = new SecureRandom().nextInt(9000) + 1000;
+
+UserDto.SignupResponse response =
+        new UserDto.SignupResponse(user, otp);
+
+redisService.set(user.getUserName(), response);
+
+return response;
+       
     }
 
     public UserDto.AuthResponse login(UserDto.LoginRequest request) {
@@ -63,4 +70,24 @@ public class UserService {
         return new UserDto.UserResponse(user.getUserName(),  user.getEmail(), user.getPhone(),
                 user.getAddress());
     }
+   @Transactional
+public String verifyUser(String userName, long otp) {
+
+    UserDto.SignupResponse response =
+            (UserDto.SignupResponse) redisService.get(userName);
+
+    if (response == null) {
+        return "OTP expired";
+    }
+
+    if (response.otp() != otp) {
+        return "Invalid OTP";
+    }
+
+    userRepository.save(response.user());
+
+    redisService.delete(userName);
+
+    return "User verified successfully";
+}
 }

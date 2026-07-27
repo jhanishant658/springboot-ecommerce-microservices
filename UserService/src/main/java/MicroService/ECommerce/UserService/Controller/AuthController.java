@@ -21,7 +21,7 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/auth/signup")
-    public ResponseEntity<UserDto.AuthResponse> signup(@RequestBody UserDto.SignupRequest request) {
+    public ResponseEntity<UserDto.SignupResponse> signup(@RequestBody UserDto.SignupRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.signup(request));
     }
 
@@ -43,5 +43,9 @@ public class AuthController {
     @GetMapping("/auth/health")
     public String health() {
         return "user-service is running";
+    }
+    @GetMapping("/verifyUser/{userName}/{otp}")
+    public String verifyUser(@PathVariable String userName , @PathVariable long otp){
+        return userService.verifyUser(userName , otp);
     }
 }

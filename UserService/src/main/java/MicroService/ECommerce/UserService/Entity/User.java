@@ -2,7 +2,8 @@ package MicroService.ECommerce.UserService.Entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Builder;
@@ -17,6 +18,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class User {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long userId;
     private String userName;
 
     @Column(nullable = false, unique = true)
