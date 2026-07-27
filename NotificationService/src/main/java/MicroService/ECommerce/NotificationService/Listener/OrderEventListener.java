@@ -25,7 +25,7 @@ public class OrderEventListener {
 
     private final NotificationService notificationService;
 
-    @KafkaListener(topics = "order-placed", groupId = "notification-group", containerFactory = "kafkaListenerContainerFactory")
+  
     private void onOrderEvent(OrderEvents event) {
         log.info("Received order event: orderId={}, userId={}, eventType={}, status={}",
                 event.orderId(), event.userId(), event.eventType(), event.status());

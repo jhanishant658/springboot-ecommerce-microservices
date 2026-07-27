@@ -33,8 +33,8 @@ public class NotificationService {
                 .sentAt(Instant.now())
                 .status(Notification.Status.PENDING)
                 .build();
-
-        notification = notificationRepository.save(notification);
+if(request.userId()!=0L){
+        notification = notificationRepository.save(notification);}
         log.info("Queued {} notification {} to {}: {}", request.channel(), notification.getId(),
                 request.recipient(), request.subject());
 

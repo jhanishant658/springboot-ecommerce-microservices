@@ -9,4 +9,7 @@ public class NotificationDtos {
 
     public record NotificationResponse(Long id, Long userId, String recipient, Notification.Channel channel, String subject, String message, Instant sentAt,
     Notification.Status status, String errorMessage) {}
+    public record UserEvent(String email , long otp){
+        
+    }
 }
