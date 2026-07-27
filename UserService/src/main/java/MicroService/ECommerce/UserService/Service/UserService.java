@@ -1,10 +1,12 @@
 package MicroService.ECommerce.UserService.Service;
 
 
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import MicroService.ECommerce.UserService.Dto.UserDto;
+import MicroService.ECommerce.UserService.Dto.UserDto.UserEvent;
 import MicroService.ECommerce.UserService.Entity.User;
 import MicroService.ECommerce.UserService.Repository.UserRepository;
 import MicroService.ECommerce.UserService.Security.JwtTokenProvider;
@@ -18,6 +20,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisService redisService;
+    private final KafkaTemplate<String , UserEvent> kafka ; 
     @Transactional
     public UserDto.SignupResponse signup(UserDto.SignupRequest request) {
         if (userRepository.existsByEmail(request.email())) {
@@ -37,6 +40,8 @@ UserDto.SignupResponse response =
         new UserDto.SignupResponse(user, otp);
 
 redisService.set(user.getUserName(), response);
+UserEvent event = new UserEvent(user.getEmail(),otp);
+kafka.send("user-event" ,event);
 
 return response;
        
