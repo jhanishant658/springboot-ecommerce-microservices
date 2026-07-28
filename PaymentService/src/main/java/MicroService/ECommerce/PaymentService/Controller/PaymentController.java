@@ -34,10 +34,7 @@ public class PaymentController {
         return paymentService.topUp(userId, request);
     }
 
-    @PostMapping("payments")
-    public PaymentDtos.PaymentResponse pay(@RequestBody PaymentDtos.PaymentRequest request) {
-        return paymentService.pay(request);
-    }
+
 
     @GetMapping("payments/users/{userId}")
     public List<PaymentDtos.PaymentResponse> payments(@PathVariable Long userId) {

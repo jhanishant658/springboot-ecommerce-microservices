@@ -1,11 +1,17 @@
 package MicroService.ECommerce.PaymentService.Service;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import MicroService.ECommerce.PaymentService.Dtos.PaymentDtos;
+import MicroService.ECommerce.PaymentService.Dtos.PaymentDtos.PaymentResponse;
 import MicroService.ECommerce.PaymentService.Dtos.PaymentDtos.WalletResponse;
+import MicroService.ECommerce.PaymentService.Events.EventType;
+import MicroService.ECommerce.PaymentService.Events.OrderEvents;
 import MicroService.ECommerce.PaymentService.Model.Payment;
 import MicroService.ECommerce.PaymentService.Model.Wallet;
 import MicroService.ECommerce.PaymentService.Repository.PaymentRepo;
@@ -20,6 +26,7 @@ import java.util.List;
 public class PaymentService {
     private final WalletRepo walletRepository;
     private final PaymentRepo paymentRepository;
+    private final KafkaTemplate<String, PaymentResponse> kafkaTemplate ; 
 
     @Transactional
     public PaymentDtos.WalletResponse createWallet(PaymentDtos.WalletRequest request) {
@@ -43,15 +50,17 @@ public class PaymentService {
         return walletRepository.findById(userId).map(this::toWalletResponse)
                 .orElseThrow(() -> new IllegalArgumentException("Wallet not found"));
     }
-
+    
+     @KafkaListener(topics = "order-placed", groupId = "payment-group", containerFactory = "kafkaListenerContainerFactory")
     @Transactional
-    public PaymentDtos.PaymentResponse pay(PaymentDtos.PaymentRequest request) {
+    public void pay(OrderEvents request) {
+        if(request.eventType()!=EventType.PAYMENT_PENDING) return ; 
         Wallet wallet = walletRepository.findById(request.userId())
                 .orElseThrow(() -> new IllegalArgumentException("Wallet not found"));
         Payment.PaymentStatus status;
         String message;
-        if (wallet.getBalance().compareTo(request.amount()) >= 0) {
-            wallet.setBalance(wallet.getBalance().subtract(request.amount()));
+        if (wallet.getBalance().compareTo(request.totalAmount()) >= 0) {
+            wallet.setBalance(wallet.getBalance().subtract(request.totalAmount()));
             walletRepository.save(wallet);
             status = Payment.PaymentStatus.SUCCESS;
             message = "Payment successful";
@@ -62,12 +71,14 @@ public class PaymentService {
         Payment payment = paymentRepository.save(Payment.builder()
                 .orderId(request.orderId())
                 .userId(request.userId())
-                .amount(request.amount())
+                .amount(request.totalAmount())
                 .status(status)
                 .message(message)
                 .createdAt(Instant.now())
                 .build());
-        return toPaymentResponse(payment);
+        
+        kafkaTemplate.send( "payment-event" ,toPaymentResponse(payment));
+        return ;
     }
 
   
