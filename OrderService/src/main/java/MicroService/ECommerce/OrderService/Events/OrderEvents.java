@@ -1,9 +1,7 @@
 package MicroService.ECommerce.OrderService.Events;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
-
-
 
 
 public record OrderEvents(
@@ -12,6 +10,7 @@ public record OrderEvents(
         String email , 
         EventType eventType,
         String status,
-        LocalDateTime eventTime
+        LocalDateTime eventTime,
+        BigDecimal totalAmount 
 ) {}
 

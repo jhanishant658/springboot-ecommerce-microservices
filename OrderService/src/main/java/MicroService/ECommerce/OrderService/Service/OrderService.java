@@ -1,5 +1,6 @@
 package MicroService.ECommerce.OrderService.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.kafka.annotation.KafkaListener;
@@ -36,20 +37,21 @@ public class OrderService {
 req.setUserId(userId);
 req.setProducts(null);
 req.setTotalAmount(0);
-    order.setUserId(req.getUserId());
-    order.setProducts(req.getProducts());
-    order.setTotalAmount(req.getTotalAmount());
-    order.setStatus("PENDING");
-    order.setDate(java.time.LocalDateTime.now());
+order.setUserId(req.getUserId());
+order.setProducts(req.getProducts());
+order.setTotalAmount(req.getTotalAmount());
+order.setStatus("PENDING");
+order.setDate(java.time.LocalDateTime.now());
      orderRepo.save(order);
      log.info("order placed with default data");
      OrderEvents events = new OrderEvents(
       order.getId() ,
       userId,
       "njha5901@gmail.com",
-      EventType.ORDER_PENDING,
+      EventType.PAYMENT_PENDING,
       order.getStatus(),
-      order.getDate()
+      order.getDate(),
+      BigDecimal.valueOf(100)
      );
 
      try {
@@ -83,7 +85,8 @@ log.info("Offset    : {}", result.getRecordMetadata().offset());
       "njha5901@gmail.com",
       EventType.ORDER_STATUS_UPDATED,
       order.getStatus(),
-      order.getDate()
+      order.getDate() ,
+      BigDecimal.valueOf(order.getTotalAmount())
      );
     try {
     var result = kafkaTemplate.send("order-placed", events).get();
@@ -135,7 +138,8 @@ public void PlaceOrderFromCart(CartEvent event){
       "njha5901@gmail.com",
       EventType.ORDER_PLACED,
       order.getStatus(),
-      order.getDate()
+      order.getDate(),
+      BigDecimal.valueOf(order.getTotalAmount())
      );
 
      try {
