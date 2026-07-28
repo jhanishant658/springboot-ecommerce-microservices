@@ -23,6 +23,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+
 public class PaymentService {
     private final WalletRepo walletRepository;
     private final PaymentRepo paymentRepository;
@@ -54,6 +55,7 @@ public class PaymentService {
      @KafkaListener(topics = "order-placed", groupId = "payment-group", containerFactory = "kafkaListenerContainerFactory")
     @Transactional
     public void pay(OrderEvents request) {
+        System.out.println("payment method starts");
         if(request.eventType()!=EventType.PAYMENT_PENDING) return ; 
         Wallet wallet = walletRepository.findById(request.userId())
                 .orElseThrow(() -> new IllegalArgumentException("Wallet not found"));
@@ -64,9 +66,11 @@ public class PaymentService {
             walletRepository.save(wallet);
             status = Payment.PaymentStatus.SUCCESS;
             message = "Payment successful";
+            System.out.println(message);
         } else {
             status = Payment.PaymentStatus.FAILED;
             message = "Insufficient wallet balance";
+            System.out.println(message);
         }
         Payment payment = paymentRepository.save(Payment.builder()
                 .orderId(request.orderId())
@@ -77,7 +81,7 @@ public class PaymentService {
                 .createdAt(Instant.now())
                 .build());
         
-        kafkaTemplate.send( "payment-event" ,toPaymentResponse(payment));
+      //  kafkaTemplate.send( "payment-event" ,toPaymentResponse(payment));
         return ;
     }
 

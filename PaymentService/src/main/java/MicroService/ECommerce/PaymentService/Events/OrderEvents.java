@@ -10,8 +10,9 @@ import java.time.LocalDateTime;
 public record OrderEvents(
         Long orderId,
         Long userId,
+        String email , 
         EventType eventType,
         String status,
-        LocalDateTime eventTime ,
+        LocalDateTime eventTime,
         BigDecimal totalAmount 
 ) {}
