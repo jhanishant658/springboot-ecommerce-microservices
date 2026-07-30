@@ -15,7 +15,7 @@ import MicroService.ECommerce.OrderService.Client.ProductService;
 import MicroService.ECommerce.OrderService.Events.CartEvent;
 import MicroService.ECommerce.OrderService.Events.EventType;
 import MicroService.ECommerce.OrderService.Events.OrderEvents;
-
+import MicroService.ECommerce.OrderService.Events.PaymentResponse;
 import MicroService.ECommerce.OrderService.Model.Order;
 
 import lombok.AllArgsConstructor;
@@ -30,6 +30,7 @@ public class OrderService {
   private final ProductService productService ;
   private final KafkaTemplate<String, OrderEvents> kafkaTemplate ;
   public Order PlaceOrder(long userId) {
+    // place order with default data 
     Order order = new Order();
    PlaceOrderRequest req = new PlaceOrderRequest(
      
@@ -48,13 +49,14 @@ order.setDate(java.time.LocalDateTime.now());
       order.getId() ,
       userId,
       "njha5901@gmail.com",
-      EventType.PAYMENT_PENDING,
+      EventType.PENDING,
       order.getStatus(),
       order.getDate(),
-      BigDecimal.valueOf(100)
+      BigDecimal.valueOf(0)
      );
 
      try {
+        //say cart to send his data 
     var result = kafkaTemplate.send("order-placed", events).get();
 
 log.info("Topic     : {}", result.getRecordMetadata().topic());
@@ -86,7 +88,7 @@ log.info("Offset    : {}", result.getRecordMetadata().offset());
       EventType.ORDER_STATUS_UPDATED,
       order.getStatus(),
       order.getDate() ,
-      BigDecimal.valueOf(order.getTotalAmount())
+      BigDecimal.valueOf(order.getTotalAmount()),null
      );
     try {
     var result = kafkaTemplate.send("order-placed", events).get();
@@ -122,6 +124,7 @@ log.info("Offset    : {}", result.getRecordMetadata().offset());
   }
   @KafkaListener(topics ="cart-event",groupId = "order-group", containerFactory = "kafkaListenerContainerFactory")
 public void PlaceOrderFromCart(CartEvent event){
+    // take data from cart 
   log.info("placing the order with actual data");
        long orderId = event.orderId();
        PlaceOrderRequest req = event.placeOrderReq();
@@ -129,31 +132,82 @@ public void PlaceOrderFromCart(CartEvent event){
         order.setUserId(req.getUserId());
     order.setProducts(req.getProducts());
     order.setTotalAmount(req.getTotalAmount());
-    order.setStatus("PLACED");
+    order.setStatus("Created");
     order.setDate(java.time.LocalDateTime.now());
     orderRepo.save(order);
-     OrderEvents events = new OrderEvents(
+     OrderEvents paymentEvent = new OrderEvents(
       order.getId() ,
       order.getUserId(),
       "njha5901@gmail.com",
-      EventType.ORDER_PLACED,
+      EventType.PAYMENT_PENDING,
       order.getStatus(),
       order.getDate(),
-      BigDecimal.valueOf(order.getTotalAmount())
+      BigDecimal.valueOf(order.getTotalAmount()),
+      null
      );
+     //say payment service to pay 
+     kafkaTemplate.send("order-placed",paymentEvent);
+     
+}
+@KafkaListener(topics = "payment-event",groupId = "order-group", containerFactory = "PaymentkafkaListenerContainerFactory")
+@Transactional
+public void paymentStatus(PaymentResponse res){
+Order order =  orderRepo.findById(res.orderId()).orElse(null);
+    if(res.status()==PaymentStatus.SUCCESS){
 
-     try {
-    var result = kafkaTemplate.send("order-placed", events).get();
+        log.info("payment recieved");
+     
+    OrderEvents inventoryEvent = new OrderEvents(
+      res.orderId() ,
+      res.userId(),
+      "njha5901@gmail.com",
+      EventType.INVENTORY_REQUEST,
+     "Payment_SUccess",
+      order.getDate(),
+      res.amount() ,
+      order.getProducts()
+     );
+        kafkaTemplate.send("order-placed",inventoryEvent);
+        return ; 
+    }
+    updateOrderStatus(order.getOrderId(),"Low_Balance");
+}
+@KafkaListener(topics = "Inventory-event",groupId = "order-group", containerFactory = "InventorykafkaListenerContainerFactory")
+// for clearing cart or sending mail to user
+public void OrderPlacedOrNot(InventoryEvent event){
+   Order order = orderRepo.findById(event.orderId()).orElse(null);
 
-log.info("Topic     : {}", result.getRecordMetadata().topic());
-log.info("Partition : {}", result.getRecordMetadata().partition());
-log.info("Offset    : {}", result.getRecordMetadata().offset());
-    log.info("Kafka send SUCCESS");
-} catch (Exception e) {
-    e.printStackTrace();
+    if(event.status()==Status.SUCCESS){
+      
+        OrderEvents events = new OrderEvents(
+      event.orderId() ,
+      order.getUserId(),
+      "njha5901@gmail.com",
+      EventType.ORDER_PLACED,
+     "Placed",
+      order.getDate(),
+      res.amount() ,
+      order.getProducts()
+     );
+     KafkaTemplate.send("order-placed",events);
+     order.setStatus("Placed");
+    }
+    else{
+ OrderEvents events = new OrderEvents(
+      event.orderId() ,
+      order.getUserId(),
+      "njha5901@gmail.com",
+      EventType.REFUND,
+     "Placed",
+      order.getDate(),
+      res.amount() ,
+      order.getProducts()
+     );
+     KafkaTemplate.send("order-placed",events);
+     
+        order.setStatus("Cancelled");
+    }
 }
 
-
-}
     
 }

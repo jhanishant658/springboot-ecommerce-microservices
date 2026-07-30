@@ -29,5 +29,7 @@ public class Order {
     private long totalAmount ;
     private String status ;
     private LocalDateTime date ;
+    private long paymentStatus ;
+    private long inventoryStatus ; 
 
 }

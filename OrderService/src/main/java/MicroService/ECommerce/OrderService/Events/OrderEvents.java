@@ -11,6 +11,7 @@ public record OrderEvents(
         EventType eventType,
         String status,
         LocalDateTime eventTime,
-        BigDecimal totalAmount 
+        BigDecimal totalAmount ,
+        List<Product>products
 ) {}
 
