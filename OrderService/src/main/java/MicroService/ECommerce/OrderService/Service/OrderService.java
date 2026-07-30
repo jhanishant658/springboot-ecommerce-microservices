@@ -11,11 +11,15 @@ import MicroService.ECommerce.OrderService.Repository.OrderRepo;
 import MicroService.ECommerce.OrderService.Request.CartProduct;
 import MicroService.ECommerce.OrderService.Request.PlaceOrderRequest;
 import MicroService.ECommerce.OrderService.Res.OrderDetail;
+import jakarta.transaction.Transactional;
 import MicroService.ECommerce.OrderService.Client.ProductService;
 import MicroService.ECommerce.OrderService.Events.CartEvent;
 import MicroService.ECommerce.OrderService.Events.EventType;
+import MicroService.ECommerce.OrderService.Events.InventoryEvent;
 import MicroService.ECommerce.OrderService.Events.OrderEvents;
 import MicroService.ECommerce.OrderService.Events.PaymentResponse;
+import MicroService.ECommerce.OrderService.Events.PaymentStatus;
+import MicroService.ECommerce.OrderService.Events.Status;
 import MicroService.ECommerce.OrderService.Model.Order;
 
 import lombok.AllArgsConstructor;
@@ -49,10 +53,10 @@ order.setDate(java.time.LocalDateTime.now());
       order.getId() ,
       userId,
       "njha5901@gmail.com",
-      EventType.PENDING,
+      EventType.ORDER_PENDING,
       order.getStatus(),
       order.getDate(),
-      BigDecimal.valueOf(0)
+      BigDecimal.valueOf(0),null
      );
 
      try {
@@ -170,7 +174,7 @@ Order order =  orderRepo.findById(res.orderId()).orElse(null);
         kafkaTemplate.send("order-placed",inventoryEvent);
         return ; 
     }
-    updateOrderStatus(order.getOrderId(),"Low_Balance");
+    updateOrderStatus(order.getId(),"Low_Balance");
 }
 @KafkaListener(topics = "Inventory-event",groupId = "order-group", containerFactory = "InventorykafkaListenerContainerFactory")
 // for clearing cart or sending mail to user
@@ -186,10 +190,10 @@ public void OrderPlacedOrNot(InventoryEvent event){
       EventType.ORDER_PLACED,
      "Placed",
       order.getDate(),
-      res.amount() ,
+      BigDecimal.valueOf(order.getTotalAmount()) ,
       order.getProducts()
      );
-     KafkaTemplate.send("order-placed",events);
+     kafkaTemplate.send("order-placed",events);
      order.setStatus("Placed");
     }
     else{
@@ -198,15 +202,16 @@ public void OrderPlacedOrNot(InventoryEvent event){
       order.getUserId(),
       "njha5901@gmail.com",
       EventType.REFUND,
-     "Placed",
+     "cancelled",
       order.getDate(),
-      res.amount() ,
+      BigDecimal.valueOf(order.getTotalAmount()) ,
       order.getProducts()
      );
-     KafkaTemplate.send("order-placed",events);
+     kafkaTemplate.send("order-placed",events);
      
         order.setStatus("Cancelled");
     }
+    orderRepo.save(order);
 }
 
     

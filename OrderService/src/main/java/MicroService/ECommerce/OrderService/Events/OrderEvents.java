@@ -2,6 +2,9 @@ package MicroService.ECommerce.OrderService.Events;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+
+import MicroService.ECommerce.OrderService.Request.Product;
 
 
 public record OrderEvents(
