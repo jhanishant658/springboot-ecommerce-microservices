@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import MicroService.ECommerce.PaymentService.Dtos.PaymentDtos;
 import MicroService.ECommerce.PaymentService.Dtos.PaymentDtos.PaymentResponse;
-
+import MicroService.ECommerce.PaymentService.Dtos.PaymentDtos.UserEvent;
 import MicroService.ECommerce.PaymentService.Events.EventType;
 import MicroService.ECommerce.PaymentService.Events.OrderEvents;
 import MicroService.ECommerce.PaymentService.Model.Payment;
@@ -30,7 +30,9 @@ public class PaymentService {
     private final KafkaTemplate<String, PaymentResponse> kafkaTemplate ; 
 
     @Transactional
-    public PaymentDtos.WalletResponse createWallet(PaymentDtos.WalletRequest request) {
+     @KafkaListener(topics = "user-event", groupId = "payment-group", containerFactory = "userkafkaListenerContainerFactory")
+// when user signup wallet will be created
+    public PaymentDtos.WalletResponse createWallet(UserEvent request) {
         Wallet wallet = walletRepository.findById(request.userId())
                 .orElseGet(() -> walletRepository.save(Wallet.builder().id(request.userId()).balance(BigDecimal.ZERO).build()));
         return toWalletResponse(wallet);
@@ -42,7 +44,7 @@ public class PaymentService {
             throw new IllegalArgumentException("Top-up amount must be positive");
         }
         Wallet wallet = walletRepository.findById(userId)
-                .orElseGet(() -> walletRepository.save(Wallet.builder().id(userId).balance(BigDecimal.ZERO).build()));
+                .orElseGet(() -> walletRepository.save(Wallet.builder().id(userId).balance(BigDecimal.valueOf(1000)).build()));
         wallet.setBalance(wallet.getBalance().add(request.amount()));
         return toWalletResponse(walletRepository.save(wallet));
     }

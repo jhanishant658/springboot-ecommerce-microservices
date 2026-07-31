@@ -19,11 +19,7 @@ import java.util.List;
 public class PaymentController {
     private final PaymentService paymentService;
 
-    @PostMapping("wallets")
-    public PaymentDtos.WalletResponse createWallet(@RequestBody PaymentDtos.WalletRequest request) {
-        return paymentService.createWallet(request);
-    }
-
+    
     @GetMapping("wallets/{userId}")
     public PaymentDtos.WalletResponse wallet(@PathVariable Long userId) {
         return paymentService.wallet(userId);
