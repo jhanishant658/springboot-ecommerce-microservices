@@ -12,5 +12,5 @@ public record OrderEvents(
         String status,
         LocalDateTime eventTime,
         BigDecimal totalAmount ,
-        List<Product> products 
+        List<Product>products
 ) {}
