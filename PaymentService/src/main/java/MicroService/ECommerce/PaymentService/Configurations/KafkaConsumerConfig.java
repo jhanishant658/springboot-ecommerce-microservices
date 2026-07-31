@@ -46,6 +46,8 @@ public class KafkaConsumerConfig {
 
     @Value("${spring.kafka.properties.ssl.truststore.type}")
     private String truststoreType;
+    @Value("${spring.kafka.consumer.group-id}")
+    private String group ; 
 
     @Bean
     public ConsumerFactory<String, OrderEvents> consumerFactory() {
@@ -53,7 +55,7 @@ public class KafkaConsumerConfig {
         Map<String, Object> config = new HashMap<>();
 
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        config.put(ConsumerConfig.GROUP_ID_CONFIG, "order-group");
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, group);
         config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,

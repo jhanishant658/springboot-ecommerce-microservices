@@ -1,9 +1,12 @@
 package MicroService.ECommerce.PaymentService.Events;
 
+
 public enum EventType {
     PAYMENT_PENDING,
     ORDER_PLACED,
-    ORDER_CANCELLED,
+    REFUND,
     ORDER_PENDING ,
-    ORDER_STATUS_UPDATED
+    ORDER_STATUS_UPDATED,
+    INVENTORY_REQUEST,
+    
 }

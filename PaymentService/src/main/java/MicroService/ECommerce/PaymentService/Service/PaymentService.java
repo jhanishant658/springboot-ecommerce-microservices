@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import MicroService.ECommerce.PaymentService.Dtos.PaymentDtos;
 import MicroService.ECommerce.PaymentService.Dtos.PaymentDtos.PaymentResponse;
-import MicroService.ECommerce.PaymentService.Dtos.PaymentDtos.WalletResponse;
+
 import MicroService.ECommerce.PaymentService.Events.EventType;
 import MicroService.ECommerce.PaymentService.Events.OrderEvents;
 import MicroService.ECommerce.PaymentService.Model.Payment;
@@ -52,7 +52,7 @@ public class PaymentService {
                 .orElseThrow(() -> new IllegalArgumentException("Wallet not found"));
     }
     
-     @KafkaListener(topics = "order-placed", groupId = "payment-group", containerFactory = "kafkaListenerContainerFactory")
+    
     @Transactional
     public void pay(OrderEvents request) {
         System.out.println("payment method starts");
@@ -81,7 +81,7 @@ public class PaymentService {
                 .createdAt(Instant.now())
                 .build());
         
-      //  kafkaTemplate.send( "payment-event" ,toPaymentResponse(payment));
+       kafkaTemplate.send( "payment-event" ,toPaymentResponse(payment));
         return ;
     }
 
@@ -96,5 +96,18 @@ public class PaymentService {
     private PaymentDtos.PaymentResponse toPaymentResponse(Payment payment) {
         return new PaymentDtos.PaymentResponse(payment.getId(), payment.getOrderId(), payment.getUserId(),
                 payment.getAmount(), payment.getStatus(), payment.getMessage(), payment.getCreatedAt());
+    }
+     @KafkaListener(topics = "order-placed", groupId = "payment-group", containerFactory = "kafkaListenerContainerFactory")
+     public void fkaListner(OrderEvents event){
+        switch(event.eventType()){
+            case PAYMENT_PENDING :
+                pay(event);
+             break ;
+            case REFUND :
+                topUp(event.userId() , new PaymentDtos.TopUpRequest(event.totalAmount()));
+                break ;
+            default :
+              break ; 
+        }
     }
 }
