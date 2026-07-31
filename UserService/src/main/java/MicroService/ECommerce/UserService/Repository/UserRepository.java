@@ -9,7 +9,7 @@ import MicroService.ECommerce.UserService.Entity.User;
 /**
  * UserRepository
  */
-public interface UserRepository extends JpaRepository<User, String> {
+public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByEmail(String email);
 
