@@ -40,7 +40,7 @@ UserDto.SignupResponse response =
         new UserDto.SignupResponse(user, otp);
 
 redisService.set(user.getUserName(), response);
-UserEvent event = new UserEvent(user.getEmail(),otp);
+UserEvent event = new UserEvent(0,user.getEmail(),otp);
 kafka.send("user-event" ,event);
 
 return response;
@@ -89,10 +89,14 @@ public String verifyUser(String userName, long otp) {
         return "Invalid OTP";
     }
 
-    userRepository.save(response.user());
+  User user =   userRepository.save(response.user());
+long userId = user.getUserId();
 
     redisService.delete(userName);
-
+    // it will indicate that user signup successfully
+    // other service will create there entities related to user like there wallet there cart etc
+UserEvent event = new UserEvent(userId,user.getEmail(),0);
+kafka.send("user-event" ,event);
     return "User verified successfully";
 }
 }
