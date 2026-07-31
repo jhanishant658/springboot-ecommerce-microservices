@@ -13,8 +13,8 @@ import MicroService.ECommerce.CartService.Dto.CartProduct;
 import MicroService.ECommerce.CartService.Dto.Product;
 
 import MicroService.ECommerce.CartService.Events.OrderEvents;
+import MicroService.ECommerce.CartService.Events.UserEvent;
 import MicroService.ECommerce.CartService.Events.CartEvent;
-import MicroService.ECommerce.CartService.Events.EventType;
 import MicroService.ECommerce.CartService.Model.Cart;
 import MicroService.ECommerce.CartService.Repository.CartRepository;
 import MicroService.ECommerce.CartService.Client.ProductService;
@@ -32,13 +32,12 @@ public class CartService {
     private final KafkaTemplate<String , CartEvent> kafka ; 
     // create cart if it does n't exist 
     @Transactional
-    public Cart createCart(long userId , Product product){
+     @KafkaListener(topics = "user-event", groupId = "cart-group", containerFactory = "userkafkaListenerContainerFactory")
+    public Cart createCart(UserEvent event){
+        // when user signup cart will created 
+        long userId = event.userId();
          Cart cart = new Cart();
-        
-        cart.setId(userId);
-        List<Product> products = new ArrayList<>();
-        products.add(product); 
-        cart.setProducts(new ArrayList<>(products));
+         cart.setId(userId);
          log.info("Creating cart for user with ID: {}", userId);
          return cartRepo.save(cart);
     }   
@@ -71,10 +70,10 @@ public class CartService {
            return cartRepo.save(cart);
         }
         log.warn("there is no cart for this id : {}",cartId);
-        log.info("creating cart with product : {}",product);
+        
 
 
-        return createCart(cartId , product);
+        return null;
     }
     // update cart product and its quantiy
     public Cart updateCart(Long cartId, List<Product> product) {
@@ -87,7 +86,7 @@ public class CartService {
         log.warn("there is no cart for this id : {}",cartId);
         log.info("creating cart with product : {}",product);
 
-        return createCart(cartId , product.get(0));
+       return null ; 
     }
    
     public void deleteProducts(OrderEvents event){
