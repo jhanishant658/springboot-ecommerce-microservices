@@ -27,6 +27,7 @@ public class AsyncEmailDispatcher {
     public void dispatch(Long notificationId, String recipient, String subject, String message) {
         try {
             emailSenderService.sendEmail(recipient, subject, message);
+            if(notificationId==null||notificationId==0L) return ;
             notificationRepository.findById(notificationId).ifPresent(n -> {
                 n.setStatus(Notification.Status.SENT);
                 n.setSentAt(Instant.now());

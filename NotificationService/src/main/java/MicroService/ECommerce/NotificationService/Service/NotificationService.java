@@ -29,7 +29,7 @@ public class NotificationService {
                 .recipient(request.recipient())
                 .channel(request.channel())
                 .subject(request.subject())
-                .message(request.message())
+                
                 .sentAt(Instant.now())
                 .status(Notification.Status.PENDING)
                 .build();
@@ -55,7 +55,7 @@ if(request.userId()!=0L){
     private NotificationDtos.NotificationResponse toResponse(Notification notification) {
         return new NotificationDtos.NotificationResponse(notification.getId(), notification.getUserId(),
                 notification.getRecipient(), notification.getChannel(), notification.getSubject(),
-                notification.getMessage(), notification.getSentAt(), notification.getStatus(),
+                 notification.getSentAt(), notification.getStatus(),
                 notification.getErrorMessage());
     }
 }

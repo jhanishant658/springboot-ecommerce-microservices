@@ -33,7 +33,7 @@ public class Notification {
     private Channel channel;
 
     private String subject;
-    private String message;
+   
     private Instant sentAt;
 
     @Enumerated(EnumType.STRING)

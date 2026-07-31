@@ -7,9 +7,9 @@ import java.time.Instant;
 public class NotificationDtos {
     public record NotificationRequest(Long userId, String recipient, Notification.Channel channel, String subject, String message) {}
 
-    public record NotificationResponse(Long id, Long userId, String recipient, Notification.Channel channel, String subject, String message, Instant sentAt,
+    public record NotificationResponse(Long id, Long userId, String recipient, Notification.Channel channel, String subject,  Instant sentAt,
     Notification.Status status, String errorMessage) {}
-    public record UserEvent(String email , long otp){
+    public record UserEvent(long userId ,String email , long otp){
         
     }
 }

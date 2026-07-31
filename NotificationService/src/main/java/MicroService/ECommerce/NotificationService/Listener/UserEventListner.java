@@ -24,8 +24,9 @@ public class UserEventListner {
 
     private final NotificationService notificationService;
     
-    @KafkaListener(topics = "user-event", groupId = "notification-group", containerFactory = "userkafkaListenerContainerFactory")
+   
     public void sendEmailVerification(UserEvent event){
+        
 log.info("Received user event: email={}, otp={}",
                 event.email(), event.otp());
 
@@ -59,4 +60,49 @@ E-Commerce Team
              0L, recipient, Notification.Channel.EMAIL, subject, body));
     }
     
+   public void sendGreetingMessage(UserEvent event) {
+    String recipient = event.email();
+    String subject = "🎉 Welcome to E-Commerce!";
+
+    String body = """
+Hello,
+
+Welcome to E-Commerce! 🎉
+
+We're excited to have you as part of our community.
+
+Your account has been successfully created, and you can now start exploring everything our platform has to offer, including:
+
+• 🛍️ Browse thousands of products
+• ❤️ Save your favorite items
+• 🛒 Add products to your cart
+• 📦 Place and track your orders
+
+We hope you have a great shopping experience with us.
+
+If you have any questions or need assistance, feel free to contact our support team.
+
+Happy Shopping!
+
+Best Regards,
+E-Commerce Team
+""";
+
+    notificationService.send(new NotificationDtos.NotificationRequest(
+            event.userId(),
+            recipient,
+            Notification.Channel.EMAIL,
+            subject,
+            body
+    ));
+}
+ @KafkaListener(topics = "user-event", groupId = "notification-group", containerFactory = "userkafkaListenerContainerFactory")
+     public void sendMessagetoUser(UserEvent event){
+        if (event.userId() == 0) {
+            sendEmailVerification(event);
+        }
+        else{
+            sendGreetingMessage(event);
+        }
+     }
 }
