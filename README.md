@@ -1,140 +1,187 @@
-# Scalable Ecommerce Microservices Platform
+# 🛒 Scalable E-Commerce Microservices Platform
 
-Spring Boot microservices project for a scalable ecommerce backend. It uses Eureka for service discovery, Spring Cloud Gateway as the API entrypoint, OpenFeign for service-to-service communication, Resilience4j for fault tolerance, Lombok for shorter code, and PostgreSQL for every data-owning service.
+An event-driven microservices backend for an e-commerce system, built with **Spring Boot 4 / Spring Cloud 2025.1**, **Apache Kafka**, **Redis**, **PostgreSQL**, **Eureka** and **Spring Cloud Gateway**.
+
+Order placement is implemented as a **Kafka-based choreography saga** — Order, Payment and Inventory services react to each other's events with no central orchestrator, and the flow rolls back (refund) if a step fails downstream.
+
+---
+
+## Table of Contents
+- [Architecture](#architecture)
+- [Order Placement Flow (Saga)](#order-placement-flow-saga)
+- [User Signup / OTP Verification Flow](#user-signup--otp-verification-flow)
+- [Kafka Topics](#kafka-topics)
+- [Services](#services)
+- [Tech Stack](#tech-stack)
+- [API Reference](#api-reference)
+- [Running Locally](#running-locally)
+- [Configuration](#configuration)
+
+---
+
+## Architecture
+
+![Architecture Diagram](docs/architecture.svg)
+
+- **Dynamic ports (`server.port=0`)** on Cart/Order/Product/Inventory services → each can run multiple instances registered under the same Eureka app-id, so the Gateway's `lb://` routes load-balance across them.
+- **OpenFeign** is used for synchronous, low-latency reads (Cart/Order → Product, "give me these product IDs' details").
+- **Kafka** is used for everything that changes state across services (signup, order lifecycle) — this makes the order flow a **saga** instead of a chain of blocking REST calls.
+
+---
+
+## Order Placement Flow (Saga)
+
+A choreographed saga across Order, Cart, Payment and Inventory services, all communicating over Kafka. No service calls another service's REST API to place an order; every step reacts to an event.
+
+![Order Saga Flow](docs/order-saga-flow.svg)
+
+If inventory reservation fails after payment already succeeded, the system publishes `REFUND` and Payment Service credits the money back — a compensating transaction, since there's no 2PC across the three separate databases.
+
+---
+
+## User Signup / OTP Verification Flow
+
+![Signup / OTP Flow](docs/signup-flow.svg)
+
+The user row is only written to Postgres **after** OTP verification — signup doesn't create an unverified account in the database, it parks the pending signup in Redis until the OTP is confirmed.
+
+---
+
+## Kafka Topics
+
+| Topic | Producer(s) | Consumer(s) | Purpose |
+|---|---|---|---|
+| `user-event` | User Service | Cart, Payment, Notification | Fan-out on signup: create cart, create wallet, send OTP/welcome email |
+| `order-placed` | Order Service (multi-stage) | Cart, Payment, Inventory, Notification | Multiplexed saga channel — an `EventType` enum (`ORDER_PENDING`, `PAYMENT_PENDING`, `INVENTORY_REQUEST`, `ORDER_PLACED`, `REFUND`, `ORDER_STATUS_UPDATED`) tells each consumer which branch to run |
+| `cart-event` | Cart Service | Order Service | Cart snapshot (products + computed total) sent back to Order after `ORDER_PENDING` |
+| `payment-event` | Payment Service | Order Service | Payment success/failure result |
+| `Inventory-event` | Inventory Service | Order Service | Stock reservation success/failure result |
+
+All Kafka connections use SSL client-cert auth (PKCS12 keystore + JKS truststore) against a managed Aiven Kafka cluster.
+
+---
 
 ## Services
 
-| Service | Port | Responsibility |
-| --- | ---: | --- |
-| discovery-server | 8761 | Eureka service registry |
-| api-gateway | 8080 | Routes client requests to services |
-| user-service | 0   | Registration, login, JWT, profile management |
-| product-service | 0 | Products, categories, inventory |
-| cart-service | 0 | Shopping cart item management |
-| order-service | 0 | Order placement, status, order history |
-| payment-service | 0 | Internal wallet-based payments |
-| notification-service | 0 | Email/SMS-style notification records |
-## Service ports are set to 0.
-- for making multiple instance of each service
-- port 0 means assign random port which is free
-- it helps in Load Balancing
+| Service | Port | Datastore | Responsibility |
+|---|---|---|---|
+| **Service Registry** | `8761` | – | Eureka server for service discovery |
+| **API Gateway** | `8080` | – | Spring Cloud Gateway — routes `/api/v1/**` to the right service via `lb://` |
+| **User Service** | `8080` | `user-db` + Redis | Signup, OTP verification, login (JWT issuance), profile CRUD |
+| **Product Service** | `0` (dynamic) | `product-db` | Product catalog, category browsing, pagination, bulk product lookup for Cart/Order |
+| **Cart Service** | `0` (dynamic) | `cart-db` | Add/update/fetch cart items, builds order snapshot, clears cart post-order |
+| **Order Service** | `0` (dynamic) | `order-db` | Orchestrates the saga, order history, order status/detail lookup |
+| **Payment Service** | `8090` | `payment-db` | Internal wallet ledger — top-up, debit on payment, credit on refund |
+| **Inventory Service** | `0` (dynamic) | `inventory-db` | Stock levels per product, decrement on order, restock endpoint |
+| **Notification Service** | `8081` | `notification-db` | Consumes user/order events, sends transactional emails via SMTP |
 
-## What Is Included
+---
 
-- Multi-module Maven project.
-- Eureka Server and Eureka clients.
-- API Gateway routes for all services.
-- Feign clients for cart/order/payment/product/notification communication.
-- Resilience4j circuit breaker wrappers around remote calls.
-- PostgreSQL configuration per service using environment variables.
-- Wallet payment flow without Stripe, PayPal, Redis, or Kafka.
-- GitHub-ready `.gitignore` and `.env.example`.
-- Load Balancing in each services
+## Tech Stack
 
-## Database Setup
+- **Language / Runtime:** Java 21
+- **Framework:** Spring Boot 4.0.7, Spring Cloud 2025.1.2
+- **Service Discovery:** Netflix Eureka
+- **API Gateway:** Spring Cloud Gateway (WebMVC)
+- **Inter-service sync calls:** OpenFeign
+- **Messaging / Saga:** Apache Kafka (Spring Kafka), SSL-secured
+- **Databases:** PostgreSQL (one schema per service — database-per-service pattern)
+- **Cache:** Redis — short-lived OTP storage
+- **Auth:** Spring Security + BCrypt password hashing + JJWT (JWT issuance)
+- **Email:** Spring Mail / SMTP
+- **Build:** Maven (independent multi-module — no parent aggregator POM; each service builds standalone)
+- **Boilerplate reduction:** Lombok
 
-Create one PostgreSQL database per service:
+---
 
-```sql
-CREATE DATABASE ecommerce_users;
-CREATE DATABASE ecommerce_products;
-CREATE DATABASE ecommerce_carts;
-CREATE DATABASE ecommerce_orders;
-CREATE DATABASE ecommerce_payments;
-CREATE DATABASE ecommerce_notifications;
+## API Reference
+
+All routes below are exposed through the Gateway at `http://localhost:8080`.
+
+**User Service** — `/api/v1/user`
+```
+POST   /api/v1/user/auth/signup
+POST   /api/v1/user/auth/login
+GET    /api/v1/user/auth/health
+GET    /api/v1/user/verifyUser/{userName}/{otp}
+GET    /api/v1/user/users/{userName}
+PUT    /api/v1/user/users/{userName}
 ```
 
-Or start the included local PostgreSQL container:
+**Product Service** — `/api/v1/products`
+```
+GET    /api/v1/products/{id}
+POST   /api/v1/products
+POST   /api/v1/products/saveAll
+POST   /api/v1/products/getProducts          # bulk lookup by IDs (used by Cart/Order via Feign)
+GET    /api/v1/products/category/{category}/{page}
+GET    /api/v1/products/all/{page}/{size}
+```
 
+**Cart Service** — `/api/v1/cart`
+```
+POST   /api/v1/cart/addProduct?cartId={id}
+PUT    /api/v1/cart/updateProduct?cartId={id}
+POST   /api/v1/cart/getCart?cartId={id}
+```
+
+**Order Service** — `/api/v1/order`
+```
+POST   /api/v1/order/placeOrder/{userId}
+GET    /api/v1/order/orderHistory/{userId}
+PATCH  /api/v1/order/updateOrderStatus/{orderId}/{status}
+GET    /api/v1/order/getOrderDetails/{orderId}
+```
+
+**Payment Service** — `/api/v1/wallets`, `/api/v1/payments`
+```
+POST   /api/v1/wallets
+POST   /api/v1/wallets/{userId}/top-up
+GET    /api/v1/wallets/{userId}
+GET    /api/v1/payments/{userId}
+```
+
+**Inventory Service** — `/api/v1/stocks`
+```
+POST   /api/v1/stocks               # increase stock
+```
+
+---
+
+## Running Locally
+
+1. **Provision infra:** a PostgreSQL instance (one DB per service — `user-db`, `product-db`, `cart-db`, `order-db`, `payment-db`, `inventory-db`, `notification-db`), a Kafka broker (SSL-enabled if you keep the current config), and a Redis instance.
+
+2. **Start in this order** (Eureka and the Gateway first; the rest are event-driven and can start in any order):
 ```bash
-docker compose up -d postgres
+mvn -f Service_Registry/pom.xml spring-boot:run
+mvn -f GateWay/pom.xml spring-boot:run
+mvn -f UserService/pom.xml spring-boot:run
+mvn -f Product-Service/pom.xml spring-boot:run
+mvn -f CartService/pom.xml spring-boot:run
+mvn -f PaymentService/pom.xml spring-boot:run
+mvn -f InventoryService/pom.xml spring-boot:run
+mvn -f OrderService/pom.xml spring-boot:run
+mvn -f NotificationService/pom.xml spring-boot:run
 ```
 
-Each service uses `ddl-auto: update` for learning/dev mode. For production, switch to Flyway/Liquibase migrations and `ddl-auto: validate`.
+3. **Check registration:** Eureka dashboard → `http://localhost:8761`
+4. **Hit the API:** through the gateway → `http://localhost:8080`
 
-## Run Order
+Each module is an independent Maven project (no root aggregator `pom.xml`), so you can also open/build/run each folder individually in your IDE.
 
-Start services in this order:
+---
 
-```bash
-mvn -pl discovery-server spring-boot:run
-mvn -pl api-gateway spring-boot:run
-mvn -pl user-service spring-boot:run
-mvn -pl product-catalog-service spring-boot:run
-mvn -pl cart-service spring-boot:run
-mvn -pl payment-service spring-boot:run
-mvn -pl notification-service spring-boot:run
-mvn -pl order-service spring-boot:run
+## Configuration
+
+Each service reads its DB/Kafka/Redis/SMTP connection details from `application.properties`. For any environment beyond local experimentation, override these via environment variables instead of committing literal values, e.g.:
+
+```properties
+spring.datasource.url=${DB_URL}
+spring.datasource.username=${DB_USERNAME}
+spring.datasource.password=${DB_PASSWORD}
+spring.kafka.bootstrap-servers=${KAFKA_BOOTSTRAP_SERVERS}
+spring.data.redis.password=${REDIS_PASSWORD}
+spring.mail.password=${MAIL_PASSWORD}
+jwt.secret=${JWT_SECRET}
 ```
-
-Gateway URL:
-
-```text
-http://localhost:8080
-```
-
-Eureka dashboard:
-
-```text
-http://localhost:8761
-```
-
-## Main API Examples
-
-Register:
-
-```http
-POST /api/v1/auth/signup
-```
-
-Create category/product:
-
-```http
-POST /api/v1/categories
-POST /api/v1/products
-```
-
-Wallet:
-
-```http
-POST /api/v1/wallets
-POST /api/v1/wallets/{userId}/top-up
-GET /api/v1/wallets/{userId}
-```
-
-Cart:
-
-```http
-POST /api/v1/carts/{userId}/items
-GET /api/v1/carts/{userId}
-PUT /api/v1/carts/{userId}/items/{productId}
-DELETE /api/v1/carts/{userId}/items/{productId}
-```
-
-Orders:
-
-```http
-POST /api/v1/orders
-GET /api/v1/orders/{orderId}
-GET /api/v1/orders/users/{userId}
-PUT /api/v1/orders/{orderId}/status
-```
-
-## Build
-
-```bash
-mvn clean package
-```
-
-If you only want to compile without tests:
-
-```bash
-mvn clean package -DskipTests
-```
-
-## Notes
-
-- Redis and Kafka are intentionally not included, as requested.
-- Payment is internal wallet logic only.
-- Notification service stores/logs notifications and can later be connected to Twilio or SendGrid.
-- Put real secrets in environment variables, not in Git.
