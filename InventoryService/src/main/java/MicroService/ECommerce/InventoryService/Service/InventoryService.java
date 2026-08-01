@@ -34,7 +34,7 @@ public class InventoryService {
     if(event.eventType()!=EventType.INVENTORY_REQUEST) return ; 
 // on success of order it will decrease the quantity of products
        for(Product product : event.products()){
-           Inventory inventory = inventoryRepo.findByProductId(product.productId());
+           Inventory inventory = inventoryRepo.findByProductId(product.id());
            if(inventory.getStock()<product.quantity()){
             kafka.send("Inventory-event",new InventoryEvent(event.orderId(),Status.FAIL));
             // help to rollback previous quantities 
@@ -46,7 +46,7 @@ public class InventoryService {
        kafka.send("Inventory-event",new InventoryEvent(event.orderId(),Status.SUCCESS));
    }
    public String IncreaseStock(Product product){
-       Inventory inventory = inventoryRepo.findByProductId(product.productId());
+       Inventory inventory = inventoryRepo.findByProductId(product.id());
        inventory.setStock(inventory.getStock() + product.quantity());
        inventoryRepo.save(inventory);
        return "Stock increased successfully";
