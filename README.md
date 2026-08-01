@@ -21,7 +21,7 @@ Order placement is implemented as a **Kafka-based choreography saga** — Order,
 
 ## Architecture
 
-![Architecture Diagram](docs/architecture.svg)
+![Architecture Diagram](Docs/architecture.svg)
 
 - **Dynamic ports (`server.port=0`)** on Cart/Order/Product/Inventory services → each can run multiple instances registered under the same Eureka app-id, so the Gateway's `lb://` routes load-balance across them.
 - **OpenFeign** is used for synchronous, low-latency reads (Cart/Order → Product, "give me these product IDs' details").
@@ -33,7 +33,7 @@ Order placement is implemented as a **Kafka-based choreography saga** — Order,
 
 A choreographed saga across Order, Cart, Payment and Inventory services, all communicating over Kafka. No service calls another service's REST API to place an order; every step reacts to an event.
 
-![Order Saga Flow](docs/order-saga-flow.svg)
+![Order Saga Flow](Docs/order-saga-flow.svg)
 
 If inventory reservation fails after payment already succeeded, the system publishes `REFUND` and Payment Service credits the money back — a compensating transaction, since there's no 2PC across the three separate databases.
 
@@ -41,7 +41,7 @@ If inventory reservation fails after payment already succeeded, the system publi
 
 ## User Signup / OTP Verification Flow
 
-![Signup / OTP Flow](docs/signup-flow.svg)
+![Signup / OTP Flow](Docs/signup-flow.svg)
 
 The user row is only written to Postgres **after** OTP verification — signup doesn't create an unverified account in the database, it parks the pending signup in Redis until the OTP is confirmed.
 
