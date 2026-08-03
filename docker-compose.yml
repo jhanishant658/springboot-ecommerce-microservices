@@ -1,0 +1,87 @@
+services :
+    eureka-server:
+        build : ./Service_Registry
+        image : eureka-server
+        ports :
+            - "8761:8761"
+        networks:
+            - ecommerce-network
+
+    api-gateway:
+        build : ./GateWay
+        image : api-gateway
+        ports :
+            - "8080:8080"
+        environment:
+            - EUREKA_SERVER=http://eureka-server:8761/eureka/
+        networks:
+            - ecommerce-network
+
+
+    product-service:
+        build : ./ProductService
+        image : product-service
+        ports :
+            - "8081:8081"
+        environment:
+            - EUREKA_SERVER=http://eureka-server:8761/eureka/
+        networks:
+            - ecommerce-network
+    order-service:
+        build : ./OrderService
+        image : order-service
+        ports :
+            - "8082:8082"
+        environment:    
+            - EUREKA_SERVER=http://eureka-server:8761/eureka/
+        networks:
+            - ecommerce-network
+    cart-service:
+        build : ./CartService
+        image : cart-service
+        ports :
+            - "8083:8083"
+        environment:    
+            - EUREKA_SERVER=http://eureka-server:8761/eureka/
+        networks:
+            - ecommerce-network
+    payment-service:
+        build : ./PaymentService
+        image : payment-service
+        ports :
+            - "8084:8084"
+        environment:    
+            - EUREKA_SERVER=http://eureka-server:8761/eureka/
+        networks:
+            - ecommerce-network
+    inventory-service:
+        build : ./InventoryService
+        image : inventory-service
+        ports :
+            - "8085:8085"
+        environment:    
+            - EUREKA_SERVER=http://eureka-server:8761/eureka/
+        networks:
+            - ecommerce-network
+    notification-service:
+        build : ./NotificationService
+        image : notification-service
+        ports :
+            - "8086:8086"
+        environment:    
+            - EUREKA_SERVER=http://eureka-server:8761/eureka/
+        networks:
+            - ecommerce-network
+    user-service:
+        build : ./UserService
+        image : user-service
+        ports :
+            - "8087:8087"
+        environment:    
+            - EUREKA_SERVER=http://eureka-server:8761/eureka/
+        networks:
+            - ecommerce-network
+
+networks:
+    ecommerce-network:
+        driver: bridge
