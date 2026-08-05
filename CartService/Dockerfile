@@ -12,6 +12,7 @@ FROM eclipse-temurin:21-jre
 WORKDIR /CARTSERVICE
 
 COPY --from=build /CartService/target/CartService-0.0.1-SNAPSHOT.jar cart-service.jar
+COPY --from=build /CartService/src/main/resources/Certs ./src/main/resources/certs
 ENTRYPOINT ["java" ,"-jar" ,"cart-service.jar"]
 
 EXPOSE 8081

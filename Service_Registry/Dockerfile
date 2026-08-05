@@ -13,7 +13,7 @@ FROM eclipse-temurin:21-jre
 
 WORKDIR /service-registry
 
-COPY --from=build /Service_Registry/target/service-registry-0.0.1-SNAPSHOT.jar  service-registry.jar
+COPY --from=build /service-registry/target/Service_Registry-0.0.1-SNAPSHOT.jar  service-registry.jar
 
 ENTRYPOINT ["java" ,"-jar" ,"service-registry.jar"]
 

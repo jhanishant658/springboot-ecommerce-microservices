@@ -67,13 +67,13 @@ All Kafka connections use SSL client-cert auth (PKCS12 keystore + JKS truststore
 |---|---|---|---|
 | **Service Registry** | `8761` | – | Eureka server for service discovery |
 | **API Gateway** | `8080` | – | Spring Cloud Gateway — routes `/api/v1/**` to the right service via `lb://` |
-| **User Service** | `8080` | `user-db` + Redis | Signup, OTP verification, login (JWT issuance), profile CRUD |
-| **Product Service** | `0` (dynamic) | `product-db` | Product catalog, category browsing, pagination, bulk product lookup for Cart/Order |
-| **Cart Service** | `0` (dynamic) | `cart-db` | Add/update/fetch cart items, builds order snapshot, clears cart post-order |
-| **Order Service** | `0` (dynamic) | `order-db` | Orchestrates the saga, order history, order status/detail lookup |
-| **Payment Service** | `8090` | `payment-db` | Internal wallet ledger — top-up, debit on payment, credit on refund |
-| **Inventory Service** | `0` (dynamic) | `inventory-db` | Stock levels per product, decrement on order, restock endpoint |
-| **Notification Service** | `8081` | `notification-db` | Consumes user/order events, sends transactional emails via SMTP |
+| **User Service** | `8087` | `user-db` + Redis | Signup, OTP verification, login (JWT issuance), profile CRUD |
+| **Product Service** | `8081`| `product-db` | Product catalog, category browsing, pagination, bulk product lookup for Cart/Order |
+| **Cart Service** | `8083` | `cart-db` | Add/update/fetch cart items, builds order snapshot, clears cart post-order |
+| **Order Service** | `8082` | `order-db` | Orchestrates the saga, order history, order status/detail lookup |
+| **Payment Service** | `8084` | `payment-db` | Internal wallet ledger — top-up, debit on payment, credit on refund |
+| **Inventory Service** | `8085` | `inventory-db` | Stock levels per product, decrement on order, restock endpoint |
+| **Notification Service** | `8086` | `notification-db` | Consumes user/order events, sends transactional emails via SMTP |
 
 ---
 
@@ -153,18 +153,68 @@ POST   /api/v1/stocks               # increase stock
 1. **Provision infra:** a PostgreSQL instance (one DB per service — `user-db`, `product-db`, `cart-db`, `order-db`, `payment-db`, `inventory-db`, `notification-db`), a Kafka broker (SSL-enabled if you keep the current config), and a Redis instance.
 
 2. **Start in this order** (Eureka and the Gateway first; the rest are event-driven and can start in any order):
-```bash
-mvn -f Service_Registry/pom.xml spring-boot:run
-mvn -f GateWay/pom.xml spring-boot:run
-mvn -f UserService/pom.xml spring-boot:run
-mvn -f Product-Service/pom.xml spring-boot:run
-mvn -f CartService/pom.xml spring-boot:run
-mvn -f PaymentService/pom.xml spring-boot:run
-mvn -f InventoryService/pom.xml spring-boot:run
-mvn -f OrderService/pom.xml spring-boot:run
-mvn -f NotificationService/pom.xml spring-boot:run
+
+Prerequisites:
+
+- Docker & Docker Compose installed and running.
+- PostgreSQL, Redis and (optionally) a Kafka broker available for the services (see Configuration section).
+
+Quick Docker Compose quick-start (recommended):
+
+- Clone the repo if you haven't already:
+
+```
+git clone https://github.com/jhanishant658/springboot-ecommerce-microservices.git
+cd springboot-ecommerce-microservices
 ```
 
+- Build images (one-time or after code changes):
+
+```
+docker compose build
+```
+
+- Start only Service Registry (Eureka) and the API Gateway first:
+
+```
+docker compose up -d service-registry gateWay
+```
+
+Wait for Eureka to be healthy and for the Gateway to start. Verify registration at `http://localhost:8761` and the gateway at `http://localhost:8080`.
+
+- Then start the remaining services (all at once):
+
+```
+docker compose up -d
+```
+
+Or start individual services if you prefer (replace names with the service compose service names):
+
+```
+docker compose up -d UserService Product-Service CartService OrderService PaymentService InventoryService NotificationService
+```
+
+- To rebuild images and restart (useful after code changes):
+
+```
+docker compose up -d --build
+```
+
+Alternative: run a single service locally (Maven) for development:
+
+```
+cd UserService
+./mvnw spring-boot:run
+```
+
+Tips & troubleshooting:
+
+- If a service uses `server.port=0` it registers with Eureka on a dynamic port — the Gateway routes to it via service id (no port needed).
+- Check logs while starting: `docker compose logs -f <service-name>`.
+- If services fail to register, confirm DB/Kafka/Redis env vars and network connectivity.
+- Use `docker compose ps` to view running containers and ports.
+
+This sequence ensures Eureka has the registry available before other services attempt to register, and the Gateway can route traffic once services are up.
 3. **Check registration:** Eureka dashboard → `http://localhost:8761`
 4. **Hit the API:** through the gateway → `http://localhost:8080`
 

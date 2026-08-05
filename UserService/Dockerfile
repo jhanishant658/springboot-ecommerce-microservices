@@ -13,6 +13,8 @@ WORKDIR /UserService
 
 COPY --from=build /UserService/target/UserService-0.0.1-SNAPSHOT.jar  User-service.jar
 
+COPY --from=build /UserService/src/main/resources/Certs ./src/main/resources/certs
+
 ENTRYPOINT ["java" ,"-jar" ,"User-service.jar"]
 
 EXPOSE 8087

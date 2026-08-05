@@ -13,7 +13,7 @@ FROM eclipse-temurin:21-jre
 WORKDIR /PaymentService
 
 COPY --from=build /PaymentService/target/PaymentService-0.0.1-SNAPSHOT.jar  Payment-service.jar
-
+COPY --from=build /PaymentService/src/main/resources/Certs ./src/main/resources/certs
 ENTRYPOINT ["java" ,"-jar" ,"Payment-service.jar"]
 
 
