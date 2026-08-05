@@ -22,7 +22,7 @@ services :
         build : ./Product-Service
         image : product-service
         ports :
-            - "8081:8081"
+            - "8081:8080"
         environment:
             - EUREKA_SERVER=http://eureka-server:8761/eureka/
         networks:
@@ -31,7 +31,7 @@ services :
         build : ./OrderService
         image : order-service
         ports :
-            - "8082:8082"
+            - "8082:8080"
         environment:    
             - EUREKA_SERVER=http://eureka-server:8761/eureka/
         networks:
@@ -40,7 +40,7 @@ services :
         build : ./CartService
         image : cart-service
         ports :
-            - "8083:8083"
+            - "8083:8080"
         environment:    
             - EUREKA_SERVER=http://eureka-server:8761/eureka/
         networks:
@@ -49,7 +49,7 @@ services :
         build : ./PaymentService
         image : payment-service
         ports :
-            - "8084:8084"
+            - "8084:8080"
         environment:    
             - EUREKA_SERVER=http://eureka-server:8761/eureka/
         networks:
@@ -58,7 +58,7 @@ services :
         build : ./InventoryService
         image : inventory-service
         ports :
-            - "8085:8085"
+            - "8085:8080"
         environment:    
             - EUREKA_SERVER=http://eureka-server:8761/eureka/
         networks:
@@ -67,7 +67,7 @@ services :
         build : ./NotificationService
         image : notification-service
         ports :
-            - "8086:8086"
+            - "8086:8080"
         environment:    
             - EUREKA_SERVER=http://eureka-server:8761/eureka/
         networks:
@@ -76,7 +76,7 @@ services :
         build : ./UserService
         image : user-service
         ports :
-            - "8087:8087"
+            - "8087:8080"
         environment:    
             - EUREKA_SERVER=http://eureka-server:8761/eureka/
         networks:
