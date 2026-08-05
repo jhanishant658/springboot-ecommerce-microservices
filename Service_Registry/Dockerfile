@@ -13,9 +13,9 @@ FROM eclipse-temurin:21-jre
 
 WORKDIR /service-registry
 
-COPY --from=build /service-registry/target/service-registry-0.0.1-SNAPSHOT.jar  Order-service.jar
+COPY --from=build /Service_Registry/target/service-registry-0.0.1-SNAPSHOT.jar  service-registry.jar
 
-ENTRYPOINT ["java" ,"-jar" ,"Order-service.jar"]
+ENTRYPOINT ["java" ,"-jar" ,"service-registry.jar"]
 
 
 EXPOSE 8087
