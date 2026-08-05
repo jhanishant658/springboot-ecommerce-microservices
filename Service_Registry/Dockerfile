@@ -1,7 +1,21 @@
-FROM eclipse-temurin:21-jre
+
+FROM maven:3.9-eclipse-temurin-21 AS build
 
 WORKDIR /service-registry
 
-COPY target/Service_Registry-0.0.1-SNAPSHOT.jar service-registry.jar
+COPY pom.xml .
+COPY src ./src
 
-ENTRYPOINT ["java", "-jar", "service-registry.jar"]
+RUN mvn clean package -DskipTests
+
+FROM eclipse-temurin:21-jre
+
+
+WORKDIR /service-registry
+
+COPY --from=build /service-registry/target/service-registry-0.0.1-SNAPSHOT.jar  Order-service.jar
+
+ENTRYPOINT ["java" ,"-jar" ,"Order-service.jar"]
+
+
+EXPOSE 8087
