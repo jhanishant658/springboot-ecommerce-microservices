@@ -19,7 +19,7 @@ services :
 
 
     product-service:
-        build : ./ProductService
+        build : ./Product-Service
         image : product-service
         ports :
             - "8081:8081"
