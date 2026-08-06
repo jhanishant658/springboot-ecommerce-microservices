@@ -23,8 +23,8 @@ public class NotificationController {
         return notificationService.send(request);
     }
 
-    @GetMapping("/users/{userId}")
-    public List<NotificationDtos.NotificationResponse> userNotifications(@PathVariable Long userId) {
-        return notificationService.userNotifications(userId);
+    @GetMapping("/users")
+    public List<NotificationDtos.NotificationResponse> userNotifications() {
+        return notificationService.userNotifications();
     }
 }

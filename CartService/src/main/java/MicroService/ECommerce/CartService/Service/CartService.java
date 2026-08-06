@@ -13,6 +13,7 @@ import MicroService.ECommerce.CartService.Dto.CartProduct;
 import MicroService.ECommerce.CartService.Dto.Product;
 
 import MicroService.ECommerce.CartService.Events.OrderEvents;
+import MicroService.ECommerce.CartService.Security.UserContext;
 import MicroService.ECommerce.CartService.Events.UserEvent;
 import MicroService.ECommerce.CartService.Events.CartEvent;
 import MicroService.ECommerce.CartService.Model.Cart;
@@ -30,6 +31,7 @@ public class CartService {
     private final CartRepository cartRepo ; 
     private final ProductService productService ;
     private final KafkaTemplate<String , CartEvent> kafka ; 
+    private final UserContext userContext ;
     // create cart if it does n't exist 
     @Transactional
      @KafkaListener(topics = "user-event", groupId = "cart-group", containerFactory = "userkafkaListenerContainerFactory")
@@ -42,7 +44,9 @@ public class CartService {
          return cartRepo.save(cart);
     }   
     //Get all product of cart  
-    public List<CartProduct> getProductsByCartId(Long cartId) {
+    public List<CartProduct> getProductsByCartId() {
+        Long cartId = userContext.getUserId();
+
         Cart cart = cartRepo.findById(cartId).orElse(null);
         if (cart != null) {
            List<Long> productIds = cart.getProducts().stream()
@@ -54,7 +58,8 @@ public class CartService {
     }
     // add product to cart if it exist else create new cart with product
     @Transactional
-    public Cart addProductToCart(Long cartId, Product product) {
+    public Cart addProductToCart( Product product) {
+        Long cartId = userContext.getUserId();
         log.info("adding item in cart : {}", product);
         Cart cart = cartRepo.findById(cartId).orElse(null);
         if (cart != null) {
@@ -76,8 +81,8 @@ public class CartService {
         return null;
     }
     // update cart product and its quantiy
-    public Cart updateCart(Long cartId, List<Product> product) {
-      
+    public Cart updateCart(List<Product> product) {
+        Long cartId = userContext.getUserId();
         Cart cart = cartRepo.findById(cartId).orElse(null);
         if (cart != null) {
             cart.setProducts(product);
@@ -124,7 +129,7 @@ public class CartService {
                     .mapToLong(product -> product.getPrice() * product.getQuantity())
                     .sum();
             PlaceOrderRequest req = new PlaceOrderRequest(userId, products, totalAmount);
-            CartEvent ev = new CartEvent(event.orderId(),req);
+            CartEvent ev = new CartEvent(event.orderId(),event.email(),req);
             log.info("sending cart event to order service");
             kafka.send("cart-event", ev)
     .whenComplete((result, ex) -> {

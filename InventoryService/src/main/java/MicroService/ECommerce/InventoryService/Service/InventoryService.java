@@ -36,14 +36,14 @@ public class InventoryService {
        for(Product product : event.products()){
            Inventory inventory = inventoryRepo.findByProductId(product.id());
            if(inventory.getStock()<product.quantity()){
-            kafka.send("Inventory-event",new InventoryEvent(event.orderId(),Status.FAIL));
+            kafka.send("Inventory-event",new InventoryEvent(event.orderId(),Status.FAIL,event.email()));
             // help to rollback previous quantities 
             throw new RuntimeException("Stock not available");
            }
            inventory.setStock(inventory.getStock() - product.quantity());
            inventoryRepo.save(inventory);
        }
-       kafka.send("Inventory-event",new InventoryEvent(event.orderId(),Status.SUCCESS));
+       kafka.send("Inventory-event",new InventoryEvent(event.orderId(),Status.SUCCESS ,event.email()));
    }
    public String IncreaseStock(Product product){
        Inventory inventory = inventoryRepo.findByProductId(product.id());

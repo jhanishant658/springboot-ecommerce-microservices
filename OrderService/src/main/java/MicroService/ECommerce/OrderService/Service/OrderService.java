@@ -13,11 +13,12 @@ import MicroService.ECommerce.OrderService.Request.PlaceOrderRequest;
 import MicroService.ECommerce.OrderService.Res.OrderDetail;
 import jakarta.transaction.Transactional;
 import MicroService.ECommerce.OrderService.Client.ProductService;
+import MicroService.ECommerce.OrderService.Security.UserContext;
 import MicroService.ECommerce.OrderService.Events.CartEvent;
 import MicroService.ECommerce.OrderService.Events.EventType;
 import MicroService.ECommerce.OrderService.Events.InventoryEvent;
 import MicroService.ECommerce.OrderService.Events.OrderEvents;
-import MicroService.ECommerce.OrderService.Events.PaymentResponse;
+import MicroService.ECommerce.OrderService.Events.PaymentEvent;
 import MicroService.ECommerce.OrderService.Events.PaymentStatus;
 import MicroService.ECommerce.OrderService.Events.Status;
 import MicroService.ECommerce.OrderService.Model.Order;
@@ -33,7 +34,11 @@ public class OrderService {
  // private final CartService cartService ;
   private final ProductService productService ;
   private final KafkaTemplate<String, OrderEvents> kafkaTemplate ;
-  public Order PlaceOrder(long userId) {
+  private final UserContext userContext ;
+
+  public Order PlaceOrder() {
+    String email = userContext.getEmail();
+Long userId = userContext.getUserId();
     // place order with default data 
     Order order = new Order();
    PlaceOrderRequest req = new PlaceOrderRequest(
@@ -52,7 +57,7 @@ order.setDate(java.time.LocalDateTime.now());
      OrderEvents events = new OrderEvents(
       order.getId() ,
       userId,
-      "njha5901@gmail.com",
+      email,
       EventType.ORDER_PENDING,
       order.getStatus(),
       order.getDate(),
@@ -73,11 +78,13 @@ log.info("Offset    : {}", result.getRecordMetadata().offset());
   return order ; 
   }
   // this method help to get user order history
-  public List<Order> getOrdersByUserId(long userId) {
+  public List<Order> getOrdersByUserId() {
+      Long userId = userContext.getUserId();
       return orderRepo.findByUserIdOrderByDateDesc(userId);
   }
 // this method help you to update the status of specific order  
   public String updateOrderStatus(long orderId, String status) {
+    String email = userContext.getEmail();
     log.info("order update req iniatlized");
     Order order = orderRepo.findById(orderId).orElse(null);
     if (order == null) {
@@ -88,7 +95,7 @@ log.info("Offset    : {}", result.getRecordMetadata().offset());
     OrderEvents events = new OrderEvents(
       order.getId() ,
       order.getUserId(),
-      "njha5901@gmail.com",
+      email,
       EventType.ORDER_STATUS_UPDATED,
       order.getStatus(),
       order.getDate() ,
@@ -108,6 +115,7 @@ log.info("Offset    : {}", result.getRecordMetadata().offset());
   }
   // this method help you to find the detail of specific order
   public OrderDetail getOrderById(long orderId) {
+    
     Order order =  orderRepo.findById(orderId).orElse(null);
     OrderDetail orderDetail = new OrderDetail();
     if (order != null) {
@@ -128,6 +136,8 @@ log.info("Offset    : {}", result.getRecordMetadata().offset());
   }
   @KafkaListener(topics ="cart-event",groupId = "order-group", containerFactory = "kafkaListenerContainerFactory")
 public void PlaceOrderFromCart(CartEvent event){
+   
+
     // take data from cart 
   log.info("placing the order with actual data");
        long orderId = event.orderId();
@@ -142,7 +152,7 @@ public void PlaceOrderFromCart(CartEvent event){
      OrderEvents paymentEvent = new OrderEvents(
       order.getId() ,
       order.getUserId(),
-      "njha5901@gmail.com",
+      event.email(),
       EventType.PAYMENT_PENDING,
       order.getStatus(),
       order.getDate(),
@@ -155,8 +165,10 @@ public void PlaceOrderFromCart(CartEvent event){
 }
 @KafkaListener(topics = "payment-event",groupId = "order-group", containerFactory = "PaymentkafkaListenerContainerFactory")
 @Transactional
-public void paymentStatus(PaymentResponse res){
-Order order =  orderRepo.findById(res.orderId()).orElse(null);
+public void paymentStatus(PaymentEvent res){
+   
+    
+    Order order =  orderRepo.findById(res.orderId()).orElse(null);
     if(res.status()==PaymentStatus.SUCCESS){
 
         log.info("payment recieved");
@@ -164,7 +176,7 @@ Order order =  orderRepo.findById(res.orderId()).orElse(null);
     OrderEvents inventoryEvent = new OrderEvents(
       res.orderId() ,
       res.userId(),
-      "njha5901@gmail.com",
+      res.email(),
       EventType.INVENTORY_REQUEST,
      "Payment_SUccess",
       order.getDate(),
@@ -174,11 +186,13 @@ Order order =  orderRepo.findById(res.orderId()).orElse(null);
         kafkaTemplate.send("order-placed",inventoryEvent);
         return ; 
     }
-    updateOrderStatus(order.getId(),"Low_Balance");
+    order.setStatus("Payment_Failed");
+    orderRepo.save(order);
 }
 @KafkaListener(topics = "Inventory-event",groupId = "order-group", containerFactory = "InventorykafkaListenerContainerFactory")
 // for clearing cart or sending mail to user
 public void OrderPlacedOrNot(InventoryEvent event){
+    
    Order order = orderRepo.findById(event.orderId()).orElse(null);
 
     if(event.status()==Status.SUCCESS){
@@ -186,7 +200,7 @@ public void OrderPlacedOrNot(InventoryEvent event){
         OrderEvents events = new OrderEvents(
       event.orderId() ,
       order.getUserId(),
-      "njha5901@gmail.com",
+      event.email(),
       EventType.ORDER_PLACED,
      "Placed",
       order.getDate(),
@@ -200,7 +214,7 @@ public void OrderPlacedOrNot(InventoryEvent event){
  OrderEvents events = new OrderEvents(
       event.orderId() ,
       order.getUserId(),
-      "njha5901@gmail.com",
+     event.email(),
       EventType.REFUND,
      "cancelled",
       order.getDate(),

@@ -8,6 +8,6 @@ import MicroService.ECommerce.CartService.ClientRequest.PlaceOrderRequest;
 
 
 public record CartEvent(
-        Long orderId,
+        Long orderId,String email,
         PlaceOrderRequest placeOrderReq 
 ) {}

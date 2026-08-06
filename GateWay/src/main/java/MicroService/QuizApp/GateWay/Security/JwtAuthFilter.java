@@ -12,7 +12,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.AntPathMatcher;
+import org.springframework.util.AntPathMatcher;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;

@@ -11,7 +11,7 @@ import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 
-import MicroService.ECommerce.OrderService.Events.PaymentResponse;
+import MicroService.ECommerce.OrderService.Events.PaymentEvent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +44,7 @@ public class KafkaPaymentConsumerConfig {
     private String truststoreType;
 
     @Bean
-    public ConsumerFactory<String, PaymentResponse> PaymentconsumerFactory() {
+    public ConsumerFactory<String, PaymentEvent> PaymentconsumerFactory() {
 
         Map<String, Object> config = new HashMap<>();
 
@@ -71,8 +71,8 @@ public class KafkaPaymentConsumerConfig {
         config.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, truststorePassword);
         config.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, truststoreType);
 
-        JacksonJsonDeserializer<PaymentResponse> deserializer =
-                new JacksonJsonDeserializer<>(PaymentResponse.class);
+        JacksonJsonDeserializer<PaymentEvent> deserializer =
+                new JacksonJsonDeserializer<>(PaymentEvent.class);
 
         deserializer.addTrustedPackages("*");
         deserializer.setUseTypeHeaders(false);
@@ -85,9 +85,9 @@ public class KafkaPaymentConsumerConfig {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, PaymentResponse> PaymentkafkaListenerContainerFactory() {
+    public ConcurrentKafkaListenerContainerFactory<String, PaymentEvent> PaymentkafkaListenerContainerFactory() {
 
-        ConcurrentKafkaListenerContainerFactory<String, PaymentResponse> factory =
+        ConcurrentKafkaListenerContainerFactory<String, PaymentEvent> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
 
         factory.setConsumerFactory(PaymentconsumerFactory());

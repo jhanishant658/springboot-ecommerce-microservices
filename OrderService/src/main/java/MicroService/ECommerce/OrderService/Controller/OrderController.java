@@ -24,13 +24,13 @@ import lombok.AllArgsConstructor;
 public class OrderController {
    private final OrderService orderService ;
 
-   @PostMapping("/placeOrder/{id}")
-   public Order PlaceOrder(@PathVariable long id){
-      return orderService.PlaceOrder(id);
+   @PostMapping("/placeOrder")
+   public Order PlaceOrder(){
+      return orderService.PlaceOrder();
    }
-   @GetMapping("/orderHistory/{userId}")
-   public List<Order> getOrdersByUserId(@PathVariable long userId) {
-       return orderService.getOrdersByUserId(userId);
+   @GetMapping("/orderHistory")
+   public List<Order> getOrdersByUserId() {
+       return orderService.getOrdersByUserId();
    }
    @PatchMapping("/updateOrderStatus/{orderId}/{status}")
    public String updateOrderStatus(@PathVariable long orderId, @PathVariable String status) {

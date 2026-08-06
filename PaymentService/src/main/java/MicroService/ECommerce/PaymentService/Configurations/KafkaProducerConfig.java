@@ -10,7 +10,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JacksonJsonSerializer;
 
-import MicroService.ECommerce.PaymentService.Dtos.PaymentDtos.PaymentResponse;
+import MicroService.ECommerce.PaymentService.Dtos.PaymentDtos.PaymentEvent;
 
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.config.SslConfigs;
@@ -46,7 +46,7 @@ private String truststoreType;
 private String truststorePassword;
 
     @Bean
-    public ProducerFactory<String, PaymentResponse> producerFactory() {
+    public ProducerFactory<String, PaymentEvent> producerFactory() {
 
         Map<String, Object> config = new HashMap<>();
 
@@ -74,7 +74,7 @@ config.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, truststoreType);
     }
 
     @Bean
-    public KafkaTemplate<String, PaymentResponse> kafkaTemplate() {
+    public KafkaTemplate<String, PaymentEvent> kafkaTemplate() {
 
         return new KafkaTemplate<>(producerFactory());
 

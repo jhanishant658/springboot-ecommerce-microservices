@@ -3,6 +3,7 @@ package MicroService.ECommerce.NotificationService.Service;
 import MicroService.ECommerce.NotificationService.Dto.NotificationDtos;
 import MicroService.ECommerce.NotificationService.Model.Notification;
 import MicroService.ECommerce.NotificationService.Repository.NotificationRepository;
+import MicroService.ECommerce.NotificationService.Security.UserContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.util.List;
 public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final AsyncEmailDispatcher asyncEmailDispatcher;
+    private final UserContext userContext;
 
     /**
      * Persists the notification immediately (so it shows up in the site's
@@ -48,7 +50,8 @@ if(request.userId()!=0L){
         return toResponse(notification);
     }
 
-    public List<NotificationDtos.NotificationResponse> userNotifications(Long userId) {
+    public List<NotificationDtos.NotificationResponse> userNotifications() {
+        Long userId = userContext.getUserId();
         return notificationRepository.findByUserId(userId).stream().map(this::toResponse).toList();
     }
 

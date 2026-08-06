@@ -20,20 +20,20 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     
-    @GetMapping("wallets/{userId}")
-    public PaymentDtos.WalletResponse wallet(@PathVariable Long userId) {
-        return paymentService.wallet(userId);
+    @GetMapping("wallets")
+    public PaymentDtos.WalletResponse wallet() {
+        return paymentService.wallet();
     }
 
-    @PostMapping("wallets/{userId}/top-up")
-    public PaymentDtos.WalletResponse topUp(@PathVariable Long userId, @RequestBody PaymentDtos.TopUpRequest request) {
-        return paymentService.topUp(userId, request);
+    @PostMapping("wallets/top-up")
+    public PaymentDtos.WalletResponse topUp( @RequestBody PaymentDtos.TopUpRequest request) {
+        return paymentService.topUp( request);
     }
 
 
 
-    @GetMapping("payments/users/{userId}")
-    public List<PaymentDtos.PaymentResponse> payments(@PathVariable Long userId) {
-        return paymentService.payments(userId);
+    @GetMapping("payments/users")
+    public List<PaymentDtos.PaymentResponse> payments() {
+        return paymentService.payments();
     }
 }

@@ -42,8 +42,6 @@ public class Product {
     private double price ;
     @Positive
     private double discountPrice;
-    @Positive
-    private long stock ;
     private String thumbnail ;
     
 }

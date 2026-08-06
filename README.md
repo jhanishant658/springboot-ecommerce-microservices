@@ -120,15 +120,15 @@ GET    /api/v1/products/all/{page}/{size}
 
 **Cart Service** — `/api/v1/cart`
 ```
-POST   /api/v1/cart/addProduct?cartId={id}
-PUT    /api/v1/cart/updateProduct?cartId={id}
-POST   /api/v1/cart/getCart?cartId={id}
+POST   /api/v1/cart/addProduct
+PUT    /api/v1/cart/updateProduct
+POST   /api/v1/cart/getCart
 ```
 
 **Order Service** — `/api/v1/order`
 ```
-POST   /api/v1/order/placeOrder/{userId}
-GET    /api/v1/order/orderHistory/{userId}
+POST   /api/v1/order/placeOrder/
+GET    /api/v1/order/orderHistory/
 PATCH  /api/v1/order/updateOrderStatus/{orderId}/{status}
 GET    /api/v1/order/getOrderDetails/{orderId}
 ```
