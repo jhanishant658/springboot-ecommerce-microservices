@@ -47,7 +47,6 @@ public class OrderEventListener {
     private String subjectFor(OrderEvents event) {
         return switch (event.eventType()) {
             case ORDER_PLACED -> "Your order #" + event.orderId() + " has been placed";
-            case ORDER_CANCELLED -> "Your order #" + event.orderId() + " has been cancelled";
             case ORDER_PENDING -> "Your order #" + event.orderId() + " is pending";
              default -> "Not Sure about it ";
         };

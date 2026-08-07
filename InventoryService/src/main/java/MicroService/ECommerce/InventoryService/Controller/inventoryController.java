@@ -3,6 +3,7 @@ package MicroService.ECommerce.InventoryService.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PostMapping;
 
 import MicroService.ECommerce.InventoryService.Dtos.InventoryDtos.Product;
 import MicroService.ECommerce.InventoryService.Service.InventoryService;
@@ -16,6 +17,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class inventoryController {
 private final InventoryService inventoryService ; 
+     @PostMapping()
     public String increaseStock(@RequestBody Product product){
      return inventoryService.IncreaseStock(product);
     }

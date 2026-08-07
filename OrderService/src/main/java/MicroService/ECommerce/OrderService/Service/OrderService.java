@@ -189,7 +189,7 @@ public void paymentStatus(PaymentEvent res){
     order.setStatus("Payment_Failed");
     orderRepo.save(order);
 }
-@KafkaListener(topics = "Inventory-event",groupId = "order-group", containerFactory = "InventorykafkaListenerContainerFactory")
+@KafkaListener(topics = "Inventory-event",groupId = "order-group-v3", containerFactory = "InventorykafkaListenerContainerFactory")
 // for clearing cart or sending mail to user
 public void OrderPlacedOrNot(InventoryEvent event){
     

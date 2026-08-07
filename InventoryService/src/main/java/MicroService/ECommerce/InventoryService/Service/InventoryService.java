@@ -28,7 +28,7 @@ public class InventoryService {
    private final KafkaTemplate<String , InventoryEvent> kafka ; 
   
   
-   @KafkaListener(topics = "order-placed", groupId = "inventory-group", containerFactory = "kafkaListenerContainerFactory")
+  
    @Transactional
    public void orderSuccess(OrderEvents event){
     if(event.eventType()!=EventType.INVENTORY_REQUEST) return ; 
@@ -36,19 +36,35 @@ public class InventoryService {
        for(Product product : event.products()){
            Inventory inventory = inventoryRepo.findByProductId(product.id());
            if(inventory.getStock()<product.quantity()){
-            kafka.send("Inventory-event",new InventoryEvent(event.orderId(),Status.FAIL,event.email()));
+           
             // help to rollback previous quantities 
             throw new RuntimeException("Stock not available");
            }
            inventory.setStock(inventory.getStock() - product.quantity());
            inventoryRepo.save(inventory);
        }
-       kafka.send("Inventory-event",new InventoryEvent(event.orderId(),Status.SUCCESS ,event.email()));
    }
    public String IncreaseStock(Product product){
        Inventory inventory = inventoryRepo.findByProductId(product.id());
+       if(inventory==null){
+        inventory = new Inventory();
+        inventory.setProductId(product.id());
+        inventory.setStock(0L);
+       }
        inventory.setStock(inventory.getStock() + product.quantity());
        inventoryRepo.save(inventory);
        return "Stock increased successfully";
    }
+   @KafkaListener(topics = "order-placed", groupId = "inventory-group", containerFactory = "kafkaListenerContainerFactory")
+   public void kafkaListner(OrderEvents event){
+   if(event.eventType()!=EventType.INVENTORY_REQUEST) return ; 
+   try{
+       orderSuccess(event);
+       kafka.send("Inventory-event",new InventoryEvent(event.orderId(),Status.SUCCESS ,event.email()));
+   }
+    catch(Exception e){
+          log.error("Error processing order: " + e.getMessage());
+           kafka.send("Inventory-event",new InventoryEvent(event.orderId(),Status.FAIL,event.email()));
+   }
+}
 }

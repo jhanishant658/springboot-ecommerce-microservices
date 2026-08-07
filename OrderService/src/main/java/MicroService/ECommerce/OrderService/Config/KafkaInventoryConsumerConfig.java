@@ -51,8 +51,8 @@ public class KafkaInventoryConsumerConfig {
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         // dedicated consumer group so this service gets its own copy of every
         // event, independent of order-service's "order-group" offset
-        config.put(ConsumerConfig.GROUP_ID_CONFIG, "notification-group");
-        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+       
+        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
 
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
                 StringDeserializer.class);
