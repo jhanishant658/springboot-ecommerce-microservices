@@ -12,4 +12,5 @@ public class NotificationDtos {
     public record UserEvent(long userId ,String email , long otp){
         
     }
+   
 }

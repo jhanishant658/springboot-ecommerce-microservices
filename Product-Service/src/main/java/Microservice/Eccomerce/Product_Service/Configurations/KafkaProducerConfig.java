@@ -10,7 +10,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JacksonJsonSerializer;
 
-import Microservice.Eccomerce.Product_Service.Events.ProductEvent;
+import Microservice.Eccomerce.Product_Service.Event.ProductEvent;
 
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.config.SslConfigs;

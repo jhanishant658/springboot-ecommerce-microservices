@@ -16,6 +16,7 @@ import MicroService.ECommerce.InventoryService.Events.InventoryEvent;
 import MicroService.ECommerce.InventoryService.Events.Status;
 import MicroService.ECommerce.InventoryService.Events.OrderEvents;
 import MicroService.ECommerce.InventoryService.Model.Inventory;
+import MicroService.ECommerce.InventoryService.Events.ProductEvent;
 
 /**
  * InventoryService
@@ -66,5 +67,11 @@ public class InventoryService {
           log.error("Error processing order: " + e.getMessage());
            kafka.send("Inventory-event",new InventoryEvent(event.orderId(),Status.FAIL,event.email()));
    }
+}
+ @KafkaListener(topics = "cart-event", groupId = "product-group", containerFactory = "productKafkaListenerContainerFactory")
+public void productCreated(ProductEvent productEvent){
+    if(productEvent==null||productEvent.productId()==null) return ;
+    Product product = new Product(productEvent.productId(),productEvent.stock());
+    IncreaseStock(product);
 }
 }

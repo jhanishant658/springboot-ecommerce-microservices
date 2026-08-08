@@ -42,7 +42,7 @@ public class ProductService {
 
   Product savedProduct = productRepo.save(product);
 
-  kafkaTemplate.send("product-topic", new ProductEvent(EventType.PRODUCT_CREATED, savedProduct.getId(), productRequest.getQuantity()));
+  kafkaTemplate.send("cart-event", new ProductEvent( savedProduct.getId(), productRequest.getQuantity()));
 
   return savedProduct;
  }
