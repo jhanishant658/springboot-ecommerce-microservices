@@ -13,7 +13,7 @@ import Microservice.Eccomerce.Product_Service.ClientRequest.CartProduct;
 import Microservice.Eccomerce.Product_Service.Entity.Product;
 import Microservice.Eccomerce.Product_Service.Service.ProductService;
 import lombok.AllArgsConstructor;
-
+import Microservice.Eccomerce.Product_Service.Request.CreateProductRequest;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -33,7 +33,7 @@ public class ProductController {
         }
     }
     @PostMapping()
-    ResponseEntity<Product> saveProduct(@RequestBody @NonNull Product product) {
+    ResponseEntity<Product> saveProduct(@RequestBody @NonNull CreateProductRequest product) {
         Product savedProduct = productService.saveProduct(product);
         return ResponseEntity.ok(savedProduct);
     }

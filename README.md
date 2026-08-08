@@ -1,6 +1,8 @@
 # 🛒 Scalable E-Commerce Microservices Platform
 
 An event-driven microservices backend for an e-commerce system, built with **Spring Boot 4 / Spring Cloud 2025.1**, **Apache Kafka**, **Redis**, **PostgreSQL**, **Eureka** and **Spring Cloud Gateway**.
+Project reference:
+https://roadmap.sh/projects/scalable-ecommerce-platform
 
 Order placement is implemented as a **Kafka-based choreography saga** — Order, Payment and Inventory services react to each other's events with no central orchestrator, and the flow rolls back (refund) if a step fails downstream.
 

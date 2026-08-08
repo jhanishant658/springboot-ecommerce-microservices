@@ -137,7 +137,7 @@ log.info("Offset    : {}", result.getRecordMetadata().offset());
   @KafkaListener(topics ="cart-event",groupId = "order-group", containerFactory = "kafkaListenerContainerFactory")
 public void PlaceOrderFromCart(CartEvent event){
    
-
+  if(event.orderId()==null) return ; 
     // take data from cart 
   log.info("placing the order with actual data");
        long orderId = event.orderId();
