@@ -48,4 +48,8 @@ public class AuthController {
     public String verifyUser(@PathVariable String userName , @PathVariable long otp){
         return userService.verifyUser(userName , otp);
     }
+    @PostMapping("/auth/forgetPassword")
+    public ResponseEntity<UserDto.SignupResponse> forgetPassword(@RequestBody UserDto.LoginRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.forgetPassword(request));
+    }   
 }

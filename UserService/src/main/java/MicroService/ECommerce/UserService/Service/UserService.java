@@ -46,6 +46,22 @@ kafka.send("user-event" ,event);
 return response;
        
     }
+     public UserDto.SignupResponse forgetPassword(UserDto.LoginRequest request) {
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> new IllegalArgumentException("Email not registered"));
+            user.setPassword(passwordEncoder.encode(request.password()));
+
+        long otp = new SecureRandom().nextInt(9000) + 1000;
+
+        UserDto.SignupResponse response =
+                new UserDto.SignupResponse(user, otp);
+
+        redisService.set(user.getUserName(), response);
+        UserEvent event = new UserEvent(user.getUserId(),user.getEmail(),otp);
+        kafka.send("user-event" ,event);
+
+        return response;
+    }
 
     public UserDto.AuthResponse login(UserDto.LoginRequest request) {
         User user = userRepository.findByEmail(request.email())
