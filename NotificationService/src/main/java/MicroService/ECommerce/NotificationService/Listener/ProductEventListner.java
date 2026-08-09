@@ -19,9 +19,13 @@ public class ProductEventListner{
     private final NotificationService notificationService;
     private final NotificationRepository notificationRepository;
 
-      @KafkaListener(topics = "cart-event", groupId = "inventory-group", containerFactory = "productKafkaListenerContainerFactory")
+      @KafkaListener(topics = "cart-event", groupId = "notification-group-v3", containerFactory = "productKafkaListenerContainerFactory")
       public void consumeProductEvent(ProductEvent productEvent) {
           log.info("Received Product Event: {}", productEvent);
+          if(productEvent.productId() == null || productEvent.stock() <= 0){
+              log.info("Product with ID: {} is out of stock. No notification will be sent.", productEvent.productId());
+              return;
+          }
           // Handle the product event (e.g., send notification)
           List<UserDetail> userDetails = notificationRepository.findAllUserDetails();
           String message = "There is a new Product with ID: " + productEvent.productId() + " and Stock: " + productEvent.stock() + " has been created. please check it out.";

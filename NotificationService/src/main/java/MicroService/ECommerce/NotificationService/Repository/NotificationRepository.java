@@ -9,6 +9,6 @@ import java.util.List;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
     List<Notification> findByUserId(Long userId);
-    @Query("SELECT DISTINCT new MicroService.ECommerce.NotificationService.Dto.UserDetail(u.id, u.recipient) FROM Notification u")
+    @Query("SELECT DISTINCT new MicroService.ECommerce.NotificationService.Dto.UserDetail(u.userId, u.recipient) FROM Notification u")
     List<UserDetail> findAllUserDetails();
 }
