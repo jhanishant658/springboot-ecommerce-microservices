@@ -30,6 +30,7 @@ public class CartService {
     
     private final CartRepository cartRepo ; 
     private final ProductService productService ;
+    private final RedisService redisService ;
     private final KafkaTemplate<String , CartEvent> kafka ; 
     private final UserContext userContext ;
     // create cart if it does n't exist 
@@ -46,13 +47,19 @@ public class CartService {
     //Get all product of cart  
     public List<CartProduct> getProductsByCartId() {
         Long cartId = userContext.getUserId();
-
+      if(redisService.get("cart.cartProducts." + cartId) != null){
+        log.info("Retrieved products for cart ID {} from Redis cache", cartId);
+        return (List<CartProduct>) redisService.get("cart.cartProducts." + cartId);
+      }
         Cart cart = cartRepo.findById(cartId).orElse(null);
         if (cart != null) {
            List<Long> productIds = cart.getProducts().stream()
                     .map(Product::getId)
                     .toList();
-            return productService.getProductsByIds(productIds);
+            List<CartProduct> cartProducts = productService.getProductsByIds(productIds);
+            redisService.set("cart.cartProducts." + cartId, cartProducts);
+            log.info("Retrieved products for cart ID {}: {}", cartId, cartProducts);
+            return cartProducts;
         }
         return null;
     }
@@ -106,7 +113,11 @@ public class CartService {
            log.warn("there is no cart for this id : {}",cartId);
            return ; 
         }
-
+        if(redisService.get("cart.cartProducts." + cartId) != null){
+            redisService.delete("cart.cartProducts." + cartId);
+            log.info("deleted cart products from redis for cart id : {}",cartId);
+        }
+        
         if (!cart.getProducts().isEmpty()) {
             cart.setProducts(new ArrayList<>());
             cartRepo.save(cart);
@@ -123,25 +134,18 @@ public class CartService {
        log.info("get cart detail starts"); 
         long userId = event.userId();
         Cart cart = cartRepo.findById(userId).orElse(null);
+        
         if (cart != null) {
             List<Product> products = cart.getProducts();
             long totalAmount = products.stream()
                     .mapToLong(product -> product.getPrice() * product.getQuantity())
                     .sum();
             PlaceOrderRequest req = new PlaceOrderRequest(userId, products, totalAmount);
+            
+            log.info("cart details for order: {}", req);
             CartEvent ev = new CartEvent(event.orderId(),event.email(),req);
             log.info("sending cart event to order service");
-            kafka.send("cart-event", ev)
-    .whenComplete((result, ex) -> {
-        if (ex != null) {
-            log.error("FAILED TO SEND CART EVENT", ex);
-        } else {
-            log.info("CART EVENT SENT");
-            log.info("Topic: {}", result.getRecordMetadata().topic());
-            log.info("Partition: {}", result.getRecordMetadata().partition());
-            log.info("Offset: {}", result.getRecordMetadata().offset());
-        }
-    });
+            kafka.send("cart-event", ev);
 
 
         }

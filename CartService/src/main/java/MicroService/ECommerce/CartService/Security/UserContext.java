@@ -28,7 +28,7 @@ public  class UserContext {
     }
 
     /** Parsed numeric user id, or null if missing/not a number. */
-    public static Long getUserId() {
+    public  Long getUserId() {
         String raw = USER_ID.get();
         if (raw == null || raw.isBlank()) return null;
         try {
@@ -38,7 +38,7 @@ public  class UserContext {
         }
     }
 
-    public static String getEmail() {
+    public  String getEmail() {
         return EMAIL.get();
     }
 
