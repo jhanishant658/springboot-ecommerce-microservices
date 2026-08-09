@@ -35,7 +35,7 @@ public class OrderService {
   private final ProductService productService ;
   private final KafkaTemplate<String, OrderEvents> kafkaTemplate ;
   private final UserContext userContext ;
-
+  private final RedisService redisService ;
   public Order PlaceOrder() {
     String email = userContext.getEmail();
 Long userId = userContext.getUserId();
@@ -80,7 +80,13 @@ log.info("Offset    : {}", result.getRecordMetadata().offset());
   // this method help to get user order history
   public List<Order> getOrdersByUserId() {
       Long userId = userContext.getUserId();
-      return orderRepo.findByUserIdOrderByDateDesc(userId);
+       List<Order> cachedOrders = redisService.get("orderHistory.userId" + userId, List.class);
+      if(cachedOrders!=null) {
+        return cachedOrders;
+      }
+      List<Order> orders = orderRepo.findByUserIdOrderByDateDesc(userId);
+      redisService.set("orderHistory.userId"+userId , orders);
+      return orders ; 
   }
 // this method help you to update the status of specific order  
   public String updateOrderStatus(long orderId, String status) {
@@ -115,9 +121,13 @@ log.info("Offset    : {}", result.getRecordMetadata().offset());
   }
   // this method help you to find the detail of specific order
   public OrderDetail getOrderById(long orderId) {
-    
+    OrderDetail orderDetail =
+        redisService.get("orderDetail.orderId" + orderId, OrderDetail.class);
+       if(orderDetail!=null){
+           return orderDetail;
+       }
     Order order =  orderRepo.findById(orderId).orElse(null);
-    OrderDetail orderDetail = new OrderDetail();
+    
     if (order != null) {
         List<Long> quantityList = order.getProducts().stream()
                 .map(product -> product.getQuantity())
@@ -132,6 +142,7 @@ log.info("Offset    : {}", result.getRecordMetadata().offset());
         orderDetail.setStatus(order.getStatus());
         orderDetail.setDate(order.getDate());
     }
+    redisService.set("orderDetail.orderId"+orderId , orderDetail);
     return orderDetail ; 
   }
   @KafkaListener(topics ="cart-event",groupId = "order-group", containerFactory = "kafkaListenerContainerFactory")
