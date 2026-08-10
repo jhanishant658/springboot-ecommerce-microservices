@@ -73,7 +73,30 @@ return products.stream()
     Pageable pageable = PageRequest.of(page, size);
     return productRepo.findAll(pageable);
  }
+ public Product updateProduct(Long id, Product updated) {
+    Product existing = productRepo.findById(id).orElse(null);
+    if (existing == null) return null;
+    updated.setId(id);
+    return productRepo.save(updated);
+}
 
+public boolean deleteProduct(Long id) {
+    if (!productRepo.existsById(id)) return false;
+    productRepo.deleteById(id);
+    return true;
+}
+
+public List<Product> searchProducts(String keyword) {
+    return productRepo.findByTitleContainingIgnoreCase(keyword);
+}
+
+public List<Product> filterByPriceRange(double min, double max) {
+    return productRepo.findByPriceBetween(min, max);
+}
+
+public List<String> getAllCategories() {
+    return productRepo.findDistinctCategories();
+}
 
     
 }

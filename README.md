@@ -27,6 +27,8 @@ Order placement is implemented as a **Kafka-based choreography saga** — Order,
 - **Dynamic ports (`server.port=0`)** on Cart/Order/Product/Inventory services → each can run multiple instances registered under the same Eureka app-id, so the Gateway's `lb://` routes load-balance across them.
 - **OpenFeign** is used for synchronous, low-latency reads (Cart/Order → Product, "give me these product IDs' details").
 - **Kafka** is used for everything that changes state across services (signup, order lifecycle) — this makes the order flow a **saga** instead of a chain of blocking REST calls.
+- **Redis** is used for storing user detail at signup and forget password for 10 min if user will enter otp this detail will stored in db otherwise it gots deleted.
+- **Redis** is also used in cart service and order service get request to minimize feign request while fetching products.
 
 ---
 
@@ -36,7 +38,7 @@ A choreographed saga across Order, Cart, Payment and Inventory services, all com
 
 ![Order Saga Flow](Docs/order-saga-flow.svg)
 
-If inventory reservation fails after payment already succeeded, the system publishes `REFUND` and Payment Service credits the money back — a compensating transaction, since there's no 2PC across the three separate databases.
+If inventory reservation fails after payment already succeeded, the system publishes `REFUND` and Payment Service credits the money back — a compensating transaction and user will get an email that his money will be back, since there's no 2PC across the three separate databases.
 
 ---
 
@@ -46,6 +48,7 @@ If inventory reservation fails after payment already succeeded, the system publi
 
 The user row is only written to Postgres **after** OTP verification — signup doesn't create an unverified account in the database, it parks the pending signup in Redis until the OTP is confirmed.
 
+Same process will be aplicable for forget password password will changed **after** OTP verification
 ---
 
 ## Kafka Topics
@@ -90,7 +93,7 @@ All Kafka connections use SSL client-cert auth (PKCS12 keystore + JKS truststore
 - **Cache:** Redis — short-lived OTP storage
 - **Auth:** Spring Security + BCrypt password hashing + JJWT (JWT issuance)
 - **Email:** Spring Mail / SMTP
-- **Build:** Maven (independent multi-module — no parent aggregator POM; each service builds standalone)
+- **Build:** Docker 
 - **Boilerplate reduction:** Lombok
 
 ---
@@ -117,6 +120,11 @@ POST   /api/v1/products/saveAll
 POST   /api/v1/products/getProducts          # bulk lookup by IDs (used by Cart/Order via Feign)
 GET    /api/v1/products/category/{category}/{page}
 GET    /api/v1/products/all/{page}/{size}
+PUT    /api/v1/products/{id}  
+DELETE /api/v1/products/{id}
+GET    /api/v1/products/search
+GET    /api/v1/products/filter
+GET    /api/v1/products/categories
 ```
 
 **Cart Service** — `/api/v1/cart`

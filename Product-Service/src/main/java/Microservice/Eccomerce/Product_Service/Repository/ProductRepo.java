@@ -17,5 +17,15 @@ public interface ProductRepo extends JpaRepository< Product , Long> {
     Page<Product> findByCategory(String category, Pageable pageable);
 
     List<Product> findByIdIn(List<Long> productIds);
+    
+    List<Product> findByTitleContainingIgnoreCase(String keyword);
+
+    List<Product> findByPriceBetween(double min, double max);
+
+    @Query("SELECT DISTINCT p.category FROM Product p")
+    List<String> findDistinctCategories();
+
+
+    boolean existsById(@NonNull Long id);
 
 }
