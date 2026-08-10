@@ -51,6 +51,8 @@ public class JwtAuthFilter implements Filter {
             "/api/v1/user/auth/login",
             "/api/v1/user/auth/health",
             "/api/v1/user/verifyUser/**",
+            "/api/v1/user/auth/forgetPassword",
+            "/api/v1/products/**",
             "/actuator/**"
     );
 

@@ -57,7 +57,7 @@ return response;
                 new UserDto.SignupResponse(user, otp);
 
         redisService.set(user.getUserName(), response);
-        UserEvent event = new UserEvent(user.getUserId(),user.getEmail(),otp);
+        UserEvent event = new UserEvent(0,user.getEmail(),otp);
         kafka.send("user-event" ,event);
 
         return response;

@@ -39,6 +39,14 @@ public class CartService {
     public Cart createCart(UserEvent event){
         // when user signup cart will created 
         long userId = event.userId();
+        if(userId <= 0){
+            log.warn("Invalid user ID received in event: {}", event);
+            return null;
+        }
+        if(cartRepo.existsById(userId)){
+            log.info("Cart already exists for user with ID: {}", userId);
+            return cartRepo.findById(userId).orElse(null);
+        }
          Cart cart = new Cart();
          cart.setId(userId);
          log.info("Creating cart for user with ID: {}", userId);
