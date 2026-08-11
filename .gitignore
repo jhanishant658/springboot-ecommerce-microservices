@@ -58,3 +58,8 @@ build/
 
 # Generated
 bin/
+# Frontend
+
+storefront/node_modules/
+storefront/dist/
+storefront/data/
