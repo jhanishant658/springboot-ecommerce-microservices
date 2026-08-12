@@ -21,7 +21,7 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/auth/signup")
-    public ResponseEntity<UserDto.SignupResponse> signup(@RequestBody UserDto.SignupRequest request) {
+    public ResponseEntity<Boolean> signup(@RequestBody UserDto.SignupRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.signup(request));
     }
 
@@ -44,12 +44,12 @@ public class AuthController {
     public String health() {
         return "user-service is running";
     }
-    @GetMapping("/verifyUser/{userName}/{otp}")
-    public String verifyUser(@PathVariable String userName , @PathVariable long otp){
+    @GetMapping("/verifyUser")
+    public String verifyUser(@RequestBody String userName , @RequestBody long otp) {
         return userService.verifyUser(userName , otp);
     }
     @PostMapping("/auth/forgetPassword")
-    public ResponseEntity<UserDto.SignupResponse> forgetPassword(@RequestBody UserDto.LoginRequest request) {
+    public ResponseEntity<String> forgetPassword(@RequestBody UserDto.LoginRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.forgetPassword(request));
     }   
 }

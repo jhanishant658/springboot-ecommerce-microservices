@@ -22,9 +22,9 @@ public class UserService {
     private final RedisService redisService;
     private final KafkaTemplate<String , UserEvent> kafka ; 
     @Transactional
-    public UserDto.SignupResponse signup(UserDto.SignupRequest request) {
+    public boolean signup(UserDto.SignupRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("Email already registered");
+            return false;
         }
        User user = User.builder()
         .userName(request.userName())
@@ -34,19 +34,19 @@ public class UserService {
         .address(request.address())
         .build();
 
-long otp = new SecureRandom().nextInt(9000) + 1000;
+    long otp = new SecureRandom().nextInt(9000) + 1000;
 
-UserDto.SignupResponse response =
-        new UserDto.SignupResponse(user, otp);
+    UserDto.SignupResponse response =
+            new UserDto.SignupResponse(user, otp);
 
-redisService.set(user.getUserName(), response);
-UserEvent event = new UserEvent(0,user.getEmail(),otp);
-kafka.send("user-event" ,event);
+    redisService.set(user.getUserName(), response);
+    UserEvent event = new UserEvent(0,user.getEmail(),otp);
+    kafka.send("user-event" ,event);
 
-return response;
+    return true;
        
     }
-     public UserDto.SignupResponse forgetPassword(UserDto.LoginRequest request) {
+     public String forgetPassword(UserDto.LoginRequest request) {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new IllegalArgumentException("Email not registered"));
             user.setPassword(passwordEncoder.encode(request.password()));
@@ -60,7 +60,7 @@ return response;
         UserEvent event = new UserEvent(0,user.getEmail(),otp);
         kafka.send("user-event" ,event);
 
-        return response;
+        return user.getUserName();
     }
 
     public UserDto.AuthResponse login(UserDto.LoginRequest request) {
@@ -69,7 +69,7 @@ return response;
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new IllegalArgumentException("Invalid email or password");
         }
-        return new UserDto.AuthResponse(jwtTokenProvider.createToken(user), toResponse(user));
+        return new UserDto.AuthResponse(jwtTokenProvider.createToken(user));
     }
 
     public UserDto.UserResponse getProfile(String userName) {
