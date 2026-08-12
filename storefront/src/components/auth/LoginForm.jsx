@@ -5,16 +5,27 @@ import AuthShell from "./AuthShell";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
 import { useTheme } from "../../theme/ThemeContext";
+import { loginApi } from "../../api/UserApis";
 
 /**
  * `form` matches UserDto.LoginRequest { email, password }.
  * POST /api/v1/user/auth/login -> AuthResponse { token, user }
  */
-export default function LoginForm({ onSubmit }) {
+export default function LoginForm() {
   const { t } = useTheme();
   const [form, setForm] = useState({ email: "", password: "" });
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+ const handleLogin = async () => {
+  try {
+    const response = await loginApi(form);
 
+    console.log("Login successful:", response);
+
+    localStorage.setItem("token", response.token);
+  } catch (error) {
+    console.error("Login failed:", error);
+  }
+};
   return (
     <AuthShell
       eyebrow="Welcome back"
@@ -35,7 +46,7 @@ export default function LoginForm({ onSubmit }) {
           Forgot password?
         </Link>
       </div>
-      <Button className="w-full" onClick={() => onSubmit(form)}>
+      <Button className="w-full" onClick={handleLogin}>
         Sign in <ArrowRight className="h-4 w-4" />
       </Button>
     </AuthShell>

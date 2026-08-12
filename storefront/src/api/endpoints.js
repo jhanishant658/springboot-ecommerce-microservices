@@ -13,7 +13,7 @@ export const ENDPOINTS = {
   // ---- UserService ----
   signup: { method: "POST", path: "/api/v1/user/auth/signup" },
   login: { method: "POST", path: "/api/v1/user/auth/login" },
-  verifyOtp: { method: "GET", path: "/api/v1/user/verifyUser/:userName/:otp" },
+  verifyOtp: { method: "GET", path: "/api/v1/user/verifyUser" },
   forgetPassword: { method: "POST", path: "/api/v1/user/auth/forgetPassword" },
   getProfile: { method: "GET", path: "/api/v1/user/users/:userName" },
   updateProfile: { method: "PUT", path: "/api/v1/user/users/:userName" },
