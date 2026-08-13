@@ -1,18 +1,39 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, Minus, Plus, ShoppingCart, Star } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useTheme } from "../../theme/ThemeContext";
 import Price from "../ui/Price";
 import Button from "../ui/Button";
+import { getProductApi } from "../../api/ProductApis";
+import { addToCartApi } from "../../api/cartApis";
 
-/** `product` -> single Product from GET /api/v1/products/{id} */
-export default function ProductDetail({ product}) {
+export default function ProductDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const { t } = useTheme();
   const [qty, setQty] = useState(1);
+  const [product, setProduct] = useState(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    getProductApi(id).then(setProduct).catch(() => setError("Product nahi mila."));
+  }, [id]);
+
+  const onAddToCart = async () => {
+    try {
+      await addToCartApi(product, qty);
+      navigate("/cart");
+    } catch {
+      navigate("/login");
+    }
+  };
+
+  if (error) return <p className="py-16 text-center text-sm text-rose-400">{error}</p>;
+  if (!product) return <p className={`py-16 text-center text-sm ${t.muted}`}>Loading product...</p>;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <Link to={backTo} className={`mb-6 flex items-center gap-1 text-xs font-bold uppercase tracking-wide ${t.faint} hover:text-orange-500`}>
+      <Link to="/" className={`mb-6 flex items-center gap-1 text-xs font-bold uppercase tracking-wide ${t.faint} hover:text-orange-500`}>
         <ChevronLeft className="h-4 w-4" /> Back to catalog
       </Link>
       <div className="grid gap-10 md:grid-cols-2">
@@ -39,7 +60,7 @@ export default function ProductDetail({ product}) {
               </button>
             </div>
           </div>
-          <Button onClick={() => onAddToCart(product, qty)} className="w-full sm:w-auto">
+          <Button onClick={onAddToCart} className="w-full sm:w-auto">
             <ShoppingCart className="h-4 w-4" /> Add to cart
           </Button>
         </div>

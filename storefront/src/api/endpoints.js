@@ -7,7 +7,7 @@
  * `Authorization: Bearer <token>` on those calls, not a userId param.
  */
 
-export const BASE_URL = "https://urban-waffle-jj9qx5qj69gpc5v65-8080.app.github.dev";
+export const BASE_URL = "https://urban-waffle-jj9qx5qj69gpc5v65-8080.app.github.dev";;
 
 export const ENDPOINTS = {
   // ---- UserService ----
@@ -24,6 +24,7 @@ export const ENDPOINTS = {
   getByCategory: { method: "GET", path: "/api/v1/products/category/:category/:page" },
   getAllProducts: { method: "GET", path: "/api/v1/products/all/:page/:size" },
   getProductsByIds: { method: "POST", path: "/api/v1/products/getProducts" },
+  categories: { method: "GET", path: "/api/v1/products/categories" },
 
   // ---- CartService (auth) ----
   addToCart: { method: "POST", path: "/api/v1/cart/addProduct" },

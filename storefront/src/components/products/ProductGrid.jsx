@@ -1,20 +1,56 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../theme/ThemeContext";
 import ProductCard from "./ProductCard";
+import { getAllProductsApi, getCategoriesApi, getProductsByCategoryApi } from "../../api/ProductApis";
+import { addToCartApi } from "../../api/cartApis";
 
-/**
- * `products` -> content of Page<Product> from either:
- *   GET /api/v1/products/all/{page}/{size}
- *   GET /api/v1/products/category/{category}/{page}
- * Category chips + pagination are presentation-only here; wire
- * `onCategoryChange` / `onPageChange` to re-fetch from your API.
- */
 export default function ProductGrid() {
   const { t } = useTheme();
-  const products = []; // Replace with your products data
-  const categories = []; // Replace with your categories data
-  const activeCategory = null; // Replace with your active category state
-  const page = 0; // Replace with your current page state
-  const totalPages = 1; // Replace with your total pages state
+  const navigate = useNavigate();
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    getCategoriesApi().then((data) => setCategories(data.content || data || [])).catch(() => setCategories([]));
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError("");
+    const request = activeCategory ? getProductsByCategoryApi(activeCategory, page) : getAllProductsApi(page, 12);
+    request
+      .then((data) => {
+        if (cancelled) return;
+        setProducts(data.content || data || []);
+        setTotalPages(data.totalPages || 1);
+      })
+      .catch(() => !cancelled && setError("Products load nahi ho paaye. Backend/Gateway check karo."))
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [activeCategory, page]);
+
+  const onAddToCart = async (product) => {
+    try {
+      await addToCartApi(product, 1);
+    } catch {
+      navigate("/login");
+    }
+  };
+
+  const selectCategory = (category) => {
+    setActiveCategory(category);
+    setPage(0);
+  };
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-8 flex items-center justify-between">
@@ -24,7 +60,7 @@ export default function ProductGrid() {
 
       <div className="mb-6 flex flex-wrap gap-2">
         <button
-          // onClick={}
+          onClick={() => selectCategory(null)}
           className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
             !activeCategory ? "bg-orange-500 text-zinc-950" : `${t.surface} ${t.muted} hover:text-orange-500`
           }`}
@@ -34,7 +70,7 @@ export default function ProductGrid() {
         {categories.map((c) => (
           <button
             key={c}
-            // onClick={}
+            onClick={() => selectCategory(c)}
             className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
               activeCategory === c ? "bg-orange-500 text-zinc-950" : `${t.surface} ${t.muted} hover:text-orange-500`
             }`}
@@ -44,7 +80,11 @@ export default function ProductGrid() {
         ))}
       </div>
 
-      {products.length === 0 ? (
+      {loading ? (
+        <p className={`py-16 text-center text-sm ${t.muted}`}>Loading products...</p>
+      ) : error ? (
+        <p className="py-16 text-center text-sm text-rose-400">{error}</p>
+      ) : products.length === 0 ? (
         <p className={`py-16 text-center text-sm ${t.muted}`}>No products in this category yet.</p>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
@@ -58,7 +98,7 @@ export default function ProductGrid() {
         <div className="mt-8 flex items-center justify-center gap-4">
           <button
             disabled={page === 0}
-            // onClick={}
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
             className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${t.muted} hover:text-orange-500 disabled:opacity-30`}
           >
             ← Prev
@@ -68,7 +108,7 @@ export default function ProductGrid() {
           </span>
           <button
             disabled={page + 1 >= totalPages}
-            // onClick={}
+            onClick={() => setPage((p) => p + 1)}
             className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${t.muted} hover:text-orange-500 disabled:opacity-30`}
           >
             Next →

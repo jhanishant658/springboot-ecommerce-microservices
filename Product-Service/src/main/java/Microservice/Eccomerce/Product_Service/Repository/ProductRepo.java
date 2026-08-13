@@ -22,7 +22,7 @@ public interface ProductRepo extends JpaRepository< Product , Long> {
     List<Product> findByIdIn(List<Long> productIds);
     
     Page<Product> findByTitleContainingIgnoreCase(String keyword, Pageable pageable);
-    Page<String> getAllCategories(Pageable pageable);
+    
     @Query("SELECT DISTINCT p.category FROM Product p")
     Page<String> findDistinctCategories(Pageable pageable);
 
