@@ -3,6 +3,8 @@ package Microservice.Eccomerce.Product_Service.Repository;
 import java.util.List;
 import java.util.Optional;
 
+
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.lang.NonNull;
@@ -19,14 +21,14 @@ public interface ProductRepo extends JpaRepository< Product , Long> {
 
     List<Product> findByIdIn(List<Long> productIds);
     
-    List<Product> findByTitleContainingIgnoreCase(String keyword);
-
-    List<Product> findByPriceBetween(double min, double max);
-
+    Page<Product> findByTitleContainingIgnoreCase(String keyword, Pageable pageable);
+    Page<String> getAllCategories(Pageable pageable);
     @Query("SELECT DISTINCT p.category FROM Product p")
-    List<String> findDistinctCategories();
+    Page<String> findDistinctCategories(Pageable pageable);
 
-
+    Page<Product> findByCategoryAndPriceBetween(String category, double min, double max, Pageable pageable);
+    Page<Product> findByCategoryAndPriceBetweenOrderByPriceAsc(String category, double min, double max, Pageable pageable);
+    Page<Product> findByCategoryAndPriceBetweenOrderByPriceDesc(String category, double min, double max, Pageable pageable);
     boolean existsById(@NonNull Long id);
 
 }

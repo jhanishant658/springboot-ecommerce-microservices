@@ -16,6 +16,7 @@ import Microservice.Eccomerce.Product_Service.Entity.Product;
 import Microservice.Eccomerce.Product_Service.Service.ProductService;
 import lombok.AllArgsConstructor;
 import Microservice.Eccomerce.Product_Service.Request.CreateProductRequest;
+
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -24,7 +25,7 @@ import org.springframework.data.domain.Page;
 @RequestMapping("/api/v1/products")
 @AllArgsConstructor
 public class ProductController {
-    private final ProductService productService ;
+    private final ProductService productService;
     @GetMapping("/{id}")
     ResponseEntity<Product> getProductById(@PathVariable @NonNull Long id) {
         Product product = productService.getProductById(id);
@@ -40,7 +41,7 @@ public class ProductController {
         return ResponseEntity.ok(savedProduct);
     }
     @PostMapping("saveAll")
-    ResponseEntity<String> saveAllProducts(@RequestBody @NonNull java.util.List<Product> products) {
+    ResponseEntity<String> saveAllProducts(@RequestBody @NonNull List<Product> products) {
         String response = productService.saveAllProducts(products);
         return ResponseEntity.ok(response);
     }
@@ -70,17 +71,17 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    ResponseEntity<List<Product>> search(@RequestParam String keyword) {
-        return ResponseEntity.ok(productService.searchProducts(keyword));
+    ResponseEntity<Page<Product>> search(@RequestParam String keyword ,@RequestParam int page) {
+        return ResponseEntity.ok(productService.searchProducts(keyword,page));
     }
 
     @GetMapping("/filter")
-    ResponseEntity<List<Product>> filterByPrice(@RequestParam double min, @RequestParam double max) {
-        return ResponseEntity.ok(productService.filterByPriceRange(min, max));
+    ResponseEntity<Page<Product>> filterByPrice(@RequestParam String keyword, @RequestParam double min, @RequestParam double max ,@RequestParam boolean lowToHigh,@RequestParam int page) {
+        return ResponseEntity.ok(productService.filterByPriceRange(keyword, min, max, page, lowToHigh));
     }
 
     @GetMapping("/categories")
-    ResponseEntity<List<String>> getCategories() {
-        return ResponseEntity.ok(productService.getAllCategories());
+    ResponseEntity<Page<String>> getCategories(@RequestParam int page) {
+        return ResponseEntity.ok(productService.getAllCategories(page));
     }
 }
