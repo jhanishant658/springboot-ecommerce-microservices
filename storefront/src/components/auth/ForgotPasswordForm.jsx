@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Mail, Lock } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link , useNavigate} from "react-router-dom";
 import AuthShell from "./AuthShell";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
 import {forgetPasswordApi} from "../../api/UserApis";
+
 /**
  * Backend's forgetPassword endpoint reuses LoginRequest { email, password }:
  * POST /api/v1/user/auth/forgetPassword -> SignupResponse { user, otp }
@@ -13,10 +14,12 @@ import {forgetPasswordApi} from "../../api/UserApis";
 export default function ForgotPasswordForm() {
   const [form, setForm] = useState({ email: "", password: "" });
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+   const navigate = useNavigate();
   const handleForgotPassword = async () => {
     try {
       const response = await forgetPasswordApi(form);
       console.log("Forgot password request successful:", response);
+     
       navigate("/verify-otp", {
         state: {
           userName: response.userName // Pass the userName to the OtpForm

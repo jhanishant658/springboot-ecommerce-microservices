@@ -8,17 +8,13 @@ import ProductCard from "./ProductCard";
  * Category chips + pagination are presentation-only here; wire
  * `onCategoryChange` / `onPageChange` to re-fetch from your API.
  */
-export default function ProductGrid({
-  products,
-  categories,
-  activeCategory,
-  onCategoryChange,
-  onAddToCart,
-  page = 0,
-  totalPages = 1,
-  onPageChange,
-}) {
+export default function ProductGrid() {
   const { t } = useTheme();
+  const products = []; // Replace with your products data
+  const categories = []; // Replace with your categories data
+  const activeCategory = null; // Replace with your active category state
+  const page = 0; // Replace with your current page state
+  const totalPages = 1; // Replace with your total pages state
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-8 flex items-center justify-between">
@@ -28,7 +24,7 @@ export default function ProductGrid({
 
       <div className="mb-6 flex flex-wrap gap-2">
         <button
-          onClick={() => onCategoryChange(null)}
+          // onClick={}
           className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
             !activeCategory ? "bg-orange-500 text-zinc-950" : `${t.surface} ${t.muted} hover:text-orange-500`
           }`}
@@ -38,7 +34,7 @@ export default function ProductGrid({
         {categories.map((c) => (
           <button
             key={c}
-            onClick={() => onCategoryChange(c)}
+            // onClick={}
             className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
               activeCategory === c ? "bg-orange-500 text-zinc-950" : `${t.surface} ${t.muted} hover:text-orange-500`
             }`}
@@ -62,7 +58,7 @@ export default function ProductGrid({
         <div className="mt-8 flex items-center justify-center gap-4">
           <button
             disabled={page === 0}
-            onClick={() => onPageChange(page - 1)}
+            // onClick={}
             className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${t.muted} hover:text-orange-500 disabled:opacity-30`}
           >
             ← Prev
@@ -72,7 +68,7 @@ export default function ProductGrid({
           </span>
           <button
             disabled={page + 1 >= totalPages}
-            onClick={() => onPageChange(page + 1)}
+            // onClick={}
             className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${t.muted} hover:text-orange-500 disabled:opacity-30`}
           >
             Next →

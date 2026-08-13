@@ -6,7 +6,7 @@ import Price from "../ui/Price";
 import Button from "../ui/Button";
 
 /** `product` -> single Product from GET /api/v1/products/{id} */
-export default function ProductDetail({ product, backTo = "/", onAddToCart }) {
+export default function ProductDetail({ product}) {
   const { t } = useTheme();
   const [qty, setQty] = useState(1);
 

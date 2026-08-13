@@ -9,7 +9,7 @@ import Button from "../ui/Button";
  * rating, price, discountPrice, thumbnail, quantity }
  * POST /api/v1/products -> Product
  */
-export default function CreateProductForm({ onSubmit }) {
+export default function CreateProductForm() {
   const { t } = useTheme();
   const [form, setForm] = useState({
     title: "",
@@ -23,15 +23,7 @@ export default function CreateProductForm({ onSubmit }) {
     thumbnail: "",
     quantity: 0,
   });
-  const set = (k) => (e) =>
-    setForm((f) => ({ ...f, [k]: e.target.type === "number" ? Number(e.target.value) : e.target.value }));
-
-  const submit = () => {
-    onSubmit({
-      ...form,
-      images: form.images.split(",").map((s) => s.trim()).filter(Boolean),
-    });
-  };
+  
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">

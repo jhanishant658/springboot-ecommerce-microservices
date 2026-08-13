@@ -45,7 +45,7 @@ export default function OtpForm({ userName}) {
       <Button className="w-full" onClick={() => verifyUserApi(userName, otp)} disabled={otp.length < 4}>
         Verify & continue
       </Button>
-      <button onClick={onResend} className={`w-full text-center text-xs font-bold uppercase tracking-wide ${t.faint} hover:text-cyan-400`}>
+      <button  className={`w-full text-center text-xs font-bold uppercase tracking-wide ${t.faint} hover:text-cyan-400`}>
         Resend code
       </button>
     </AuthShell>

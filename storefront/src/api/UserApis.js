@@ -10,7 +10,7 @@ async function loginApi(data) {
     const response = await axios.post(`${BASE_URL}${ENDPOINTS.login.path}`, data);
     return response.data;
 }
-async function verifyOtpApi(userName, otp) {
+async function verifyUserApi(userName, otp) {
     const response = await axios.post(`${BASE_URL}${ENDPOINTS.verifyOtp.path}`, {
         userName,
         otp
@@ -27,4 +27,4 @@ async function getProfileApi(userName) {
     return response.data;
 }
 
-export { signupApi, loginApi, verifyOtpApi, forgetPasswordApi, getProfileApi };
+export { signupApi, loginApi, verifyUserApi, forgetPasswordApi, getProfileApi };

@@ -7,7 +7,7 @@
  * `Authorization: Bearer <token>` on those calls, not a userId param.
  */
 
-export const BASE_URL = "http://localhost:8080";
+export const BASE_URL = "https://urban-waffle-jj9qx5qj69gpc5v65-8080.app.github.dev";
 
 export const ENDPOINTS = {
   // ---- UserService ----
@@ -19,7 +19,7 @@ export const ENDPOINTS = {
   updateProfile: { method: "PUT", path: "/api/v1/user/users/:userName" },
 
   // ---- Product-Service ----
-  getProduct: { method: "GET", path: "/api/v1/products/:id" },
+  getProduct: { method: "GET", path: "/api/v1/products/" },
   createProduct: { method: "POST", path: "/api/v1/products" },
   getByCategory: { method: "GET", path: "/api/v1/products/category/:category/:page" },
   getAllProducts: { method: "GET", path: "/api/v1/products/all/:page/:size" },

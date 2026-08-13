@@ -3,7 +3,7 @@ import { User, Mail, Lock, Phone, MapPin, ArrowRight } from "lucide-react";
 import AuthShell from "./AuthShell";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
-import { Link , Navigate} from "react-router-dom";
+import { Link , useNavigate} from "react-router-dom";
 import { signupApi } from "../../api/UserApis";
 
 /**
@@ -13,16 +13,17 @@ import { signupApi } from "../../api/UserApis";
  */
 export default function SignupForm() {
   const [form, setForm] = useState({ userName: "", email: "", password: "", phone: "", address: "" });
+  const navigate = useNavigate();
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
  const handleSignup = async () => {
-    response = await signupApi(form);
+   const response = await signupApi(form);
     if(response == true){
       console.log("sign up successfull");
-      <Navigate to="/verify-otp"
-       state={{
-         userName: form.userName,
-       }}
-       />
+       navigate("/verify-otp", {
+                state: {
+                    userName: form.userName
+                }
+            });
     }
     else{
       console.log("sign up failed");
