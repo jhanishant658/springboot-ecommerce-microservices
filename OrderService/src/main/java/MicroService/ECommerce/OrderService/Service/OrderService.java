@@ -36,31 +36,19 @@ public class OrderService {
   private final KafkaTemplate<String, OrderEvents> kafkaTemplate ;
   private final UserContext userContext ;
   private final RedisService redisService ;
-  public Order PlaceOrder() {
+  public String PlaceOrder() {
     String email = userContext.getEmail();
 Long userId = userContext.getUserId();
     // place order with default data 
-    Order order = new Order();
-   PlaceOrderRequest req = new PlaceOrderRequest(
-     
-   );
-req.setUserId(userId);
-req.setProducts(null);
-req.setTotalAmount(0);
-order.setUserId(req.getUserId());
-order.setProducts(req.getProducts());
-order.setTotalAmount(req.getTotalAmount());
-order.setStatus("PENDING");
-order.setDate(java.time.LocalDateTime.now());
-     orderRepo.save(order);
+   
+   
      log.info("order placed with default data");
      OrderEvents events = new OrderEvents(
-      order.getId() ,
+      0L ,
       userId,
       email,
       EventType.ORDER_PENDING,
-      order.getStatus(),
-      order.getDate(),
+      
       BigDecimal.valueOf(0),null
      );
 
@@ -75,7 +63,7 @@ log.info("Offset    : {}", result.getRecordMetadata().offset());
 } catch (Exception e) {
     e.printStackTrace();
 }
-  return order ; 
+  return "order placed successfully"; 
   }
   // this method help to get user order history
   public List<Order> getOrdersByUserId() {
@@ -121,13 +109,14 @@ log.info("Offset    : {}", result.getRecordMetadata().offset());
   }
   // this method help you to find the detail of specific order
   public OrderDetail getOrderById(long orderId) {
-    OrderDetail orderDetail =
+    OrderDetail cachedrderDetail =
         redisService.get("orderDetail.orderId" + orderId, OrderDetail.class);
-       if(orderDetail!=null){
-           return orderDetail;
+       if(cachedrderDetail!=null){
+           return cachedrderDetail;
        }
     Order order =  orderRepo.findById(orderId).orElse(null);
-    
+    if(order==null)return null;
+    OrderDetail orderDetail = new OrderDetail();
     if (order != null) {
         List<Long> quantityList = order.getProducts().stream()
                 .map(product -> product.getQuantity())
@@ -151,7 +140,7 @@ public void PlaceOrderFromCart(CartEvent event){
   if(event.orderId()==null) return ; 
     // take data from cart 
   log.info("placing the order with actual data");
-       long orderId = event.orderId();
+       
        PlaceOrderRequest req = event.placeOrderReq();
        Order order =  orderRepo.findById(orderId).orElse(null);
         order.setUserId(req.getUserId());

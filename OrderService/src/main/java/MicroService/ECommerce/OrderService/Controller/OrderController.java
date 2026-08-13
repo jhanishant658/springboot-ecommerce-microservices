@@ -25,7 +25,7 @@ public class OrderController {
    private final OrderService orderService ;
 
    @PostMapping("/placeOrder")
-   public Order PlaceOrder(){
+   public String PlaceOrder(){
       return orderService.PlaceOrder();
    }
    @GetMapping("/orderHistory")
