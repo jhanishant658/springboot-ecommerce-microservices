@@ -45,8 +45,8 @@ public class AuthController {
         return "user-service is running";
     }
     @GetMapping("/verifyUser")
-    public String verifyUser(@RequestBody String userName , @RequestBody long otp) {
-        return userService.verifyUser(userName , otp);
+    public String verifyUser(@RequestBody UserDto.otpVerification req) {
+        return userService.verifyUser(req.userName() , req.otp());
     }
     @PostMapping("/auth/forgetPassword")
     public ResponseEntity<String> forgetPassword(@RequestBody UserDto.LoginRequest request) {

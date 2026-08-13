@@ -9,6 +9,7 @@ import org.springframework.lang.NonNull;
 
 import Microservice.Eccomerce.Product_Service.Entity.Product;
 import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.repository.Query;
 
 public interface ProductRepo extends JpaRepository< Product , Long> {
 
