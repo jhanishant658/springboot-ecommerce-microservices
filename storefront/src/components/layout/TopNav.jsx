@@ -1,15 +1,18 @@
-import { ShoppingCart, Search, LogOut, Bell, Wallet as WalletIcon } from "lucide-react";
+import { ShoppingCart, Search, LogOut, Bell, Wallet as WalletIcon, ShieldCheck } from "lucide-react";
 import { useTheme } from "../../theme/ThemeContext";
 import ThemeToggle from "./ThemeToggle";
 import Button from "../ui/Button";
 import { Link, useNavigate } from "react-router-dom";
 
 /**
- * user            -> UserService UserResponse ({ userName, email, phone, address }) or null
+ * user            -> decoded JWT { userName, email } or null
  * cartCount       -> sum of quantities from CartService getCart response
  * notificationCount -> unread count you derive from NotificationService list
+ * isAdmin/onToggleAdmin -> client-side only demo toggle: your backend's
+ * User entity has no role field, so there's no real admin check to call.
+ * Wire this to a real role claim if you add one later.
  */
-export default function TopNav({ user, cartCount = 0, notificationCount = 0, onLogout }) {
+export default function TopNav({ user, cartCount = 0, notificationCount = 0, onLogout, isAdmin, onToggleAdmin }) {
   const { t } = useTheme();
   const navigate = useNavigate();
 
@@ -32,6 +35,15 @@ export default function TopNav({ user, cartCount = 0, notificationCount = 0, onL
 
         <nav className="flex items-center gap-3">
           <ThemeToggle />
+          {user && (
+            <button
+              onClick={onToggleAdmin}
+              className={`hidden items-center gap-1 px-2 py-2 sm:flex ${isAdmin ? "text-orange-500" : t.faint} hover:text-orange-500`}
+              title="Toggle admin mode (demo only)"
+            >
+              <ShieldCheck className="h-5 w-5" />
+            </button>
+          )}
           {user ? (
             <>
               <Link
