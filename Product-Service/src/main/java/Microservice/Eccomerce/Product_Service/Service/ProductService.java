@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
 import Microservice.Eccomerce.Product_Service.Request.CreateProductRequest;
+import org.springframework.data.domain.PageImpl;
 
 
 /**
@@ -71,14 +72,24 @@ public class ProductService {
                 )).toList();
         }
         public Page<Product> getAllProducts(int page, int size) {
-            
-            Pageable pageable = PageRequest.of(page, size);
-            Page<Product> cachedProducts = redisService.get("allProductsPage" + page + "Size" + size, Page.class);
-            if (cachedProducts != null) return cachedProducts;
-            Page<Product> products = productRepo.findAll(pageable) ; 
-            redisService.set("allProductsPage" + page + "Size" + size,products);
-            return products;
-        }
+
+    Pageable pageable = PageRequest.of(page, size);
+
+    String key = "allProductsPage" + page + "Size" + size;
+
+    List<Product> cachedProducts =
+            redisService.get(key, List.class);
+
+    if (cachedProducts != null) {
+        return new PageImpl<>(cachedProducts, pageable, cachedProducts.size());
+    }
+
+    Page<Product> products = productRepo.findAll(pageable);
+
+    redisService.set(key, products.getContent());
+
+    return products;
+}
         public Product updateProduct(Long id, Product updated) {
             Product existing = productRepo.findById(id).orElse(null);
             if (existing == null) return null;

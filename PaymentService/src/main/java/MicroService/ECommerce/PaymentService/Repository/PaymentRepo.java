@@ -1,6 +1,7 @@
 package MicroService.ECommerce.PaymentService.Repository;
 
-import java.util.Optional;
+import java.util.List;
+
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -12,7 +13,7 @@ import MicroService.ECommerce.PaymentService.Model.Payment;
  */
 public interface PaymentRepo extends JpaRepository<Payment , Long> {
 
-    Optional<Payment> findByUserId(Long userId);
+    List<Payment> findByUserId(Long userId);
 
     
 }

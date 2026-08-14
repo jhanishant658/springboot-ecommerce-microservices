@@ -1,6 +1,7 @@
 package MicroService.ECommerce.OrderService.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.kafka.annotation.KafkaListener;
@@ -48,6 +49,8 @@ Long userId = userContext.getUserId();
       userId,
       email,
       EventType.ORDER_PENDING,
+      "Pending",
+      LocalDateTime.now(),
       
       BigDecimal.valueOf(0),null
      );
@@ -134,7 +137,7 @@ log.info("Offset    : {}", result.getRecordMetadata().offset());
     redisService.set("orderDetail.orderId"+orderId , orderDetail);
     return orderDetail ; 
   }
-  @KafkaListener(topics ="cart-event",groupId = "order-group", containerFactory = "kafkaListenerContainerFactory")
+@KafkaListener(topics ="cart-event",groupId = "order-group", containerFactory = "kafkaListenerContainerFactory")
 public void PlaceOrderFromCart(CartEvent event){
    
   if(event.orderId()==null) return ; 
@@ -142,7 +145,7 @@ public void PlaceOrderFromCart(CartEvent event){
   log.info("placing the order with actual data");
        
        PlaceOrderRequest req = event.placeOrderReq();
-       Order order =  orderRepo.findById(orderId).orElse(null);
+       Order order =  new Order();
         order.setUserId(req.getUserId());
     order.setProducts(req.getProducts());
     order.setTotalAmount(req.getTotalAmount());
