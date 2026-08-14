@@ -69,16 +69,52 @@ log.info("Offset    : {}", result.getRecordMetadata().offset());
   return "order placed successfully"; 
   }
   // this method help to get user order history
-  public List<Order> getOrdersByUserId() {
-      Long userId = userContext.getUserId();
-       List<Order> cachedOrders = redisService.get("orderHistory.userId" + userId, List.class);
-      if(cachedOrders!=null) {
+ public List<Order> getOrdersByUserId() {
+
+    Long userId = userContext.getUserId();
+
+    List<Order> cachedOrders =
+            redisService.get(
+                    "orderHistory.userId" + userId,
+                    List.class
+            );
+
+    Boolean cachedOrdersUpdated = null;
+
+    if (cachedOrders != null) {
+        cachedOrdersUpdated =
+                redisService.get(
+                        "orderHistory.userId.updated" + userId,
+                        Boolean.class
+                );
+    }
+
+    if (cachedOrders != null &&
+            Boolean.FALSE.equals(cachedOrdersUpdated)) {
+
+        log.info(
+                "Retrieved order history for user {} from Redis",
+                userId
+        );
+
         return cachedOrders;
-      }
-      List<Order> orders = orderRepo.findByUserIdOrderByDateDesc(userId);
-      redisService.set("orderHistory.userId"+userId , orders);
-      return orders ; 
-  }
+    }
+
+    List<Order> orders =
+            orderRepo.findByUserIdOrderByDateDesc(userId);
+
+    redisService.set(
+            "orderHistory.userId" + userId,
+            orders
+    );
+
+    redisService.set(
+            "orderHistory.userId.updated" + userId,
+            false
+    );
+
+    return orders;
+}
 // this method help you to update the status of specific order  
   public String updateOrderStatus(long orderId, String status) {
     String email = userContext.getEmail();
@@ -89,6 +125,8 @@ log.info("Offset    : {}", result.getRecordMetadata().offset());
     }
     order.setStatus(status);
     orderRepo.save(order);
+    redisService.set("orderHistory.userId.updated"+order.getUserId() , true);
+    redisService.set("orderDetail.orderId.updated"+orderId , true);
     OrderEvents events = new OrderEvents(
       order.getId() ,
       order.getUserId(),
@@ -112,11 +150,25 @@ log.info("Offset    : {}", result.getRecordMetadata().offset());
   }
   // this method help you to find the detail of specific order
   public OrderDetail getOrderById(long orderId) {
-    OrderDetail cachedrderDetail =
-        redisService.get("orderDetail.orderId" + orderId, OrderDetail.class);
-       if(cachedrderDetail!=null){
-           return cachedrderDetail;
-       }
+   Boolean cachedOrderDetailUpdated = null;
+OrderDetail cachedrderDetail =
+        redisService.get(
+                "orderDetail.orderId" + orderId,
+                OrderDetail.class
+        );
+if (cachedrderDetail != null) {
+    cachedOrderDetailUpdated =
+            redisService.get(
+                    "orderDetail.orderId.updated" + orderId,
+                    Boolean.class
+            );
+}
+
+if (cachedrderDetail != null &&
+        Boolean.FALSE.equals(cachedOrderDetailUpdated)) {
+
+    return cachedrderDetail;
+}
     Order order =  orderRepo.findById(orderId).orElse(null);
     if(order==null)return null;
     OrderDetail orderDetail = new OrderDetail();
@@ -135,6 +187,7 @@ log.info("Offset    : {}", result.getRecordMetadata().offset());
         orderDetail.setDate(order.getDate());
     }
     redisService.set("orderDetail.orderId"+orderId , orderDetail);
+    redisService.set("orderDetail.orderId.updated"+orderId , false);
     return orderDetail ; 
   }
 @KafkaListener(topics ="cart-event",groupId = "order-group", containerFactory = "kafkaListenerContainerFactory")
@@ -152,6 +205,8 @@ public void PlaceOrderFromCart(CartEvent event){
     order.setStatus("Created");
     order.setDate(java.time.LocalDateTime.now());
     orderRepo.save(order);
+    redisService.set("orderHistory.userId.updated"+order.getUserId() , true);
+    
      OrderEvents paymentEvent = new OrderEvents(
       order.getId() ,
       order.getUserId(),
@@ -191,6 +246,15 @@ public void paymentStatus(PaymentEvent res){
     }
     order.setStatus("Payment_Failed");
     orderRepo.save(order);
+    redisService.set(
+        "orderHistory.userId.updated" + order.getUserId(),
+        true
+);
+
+redisService.set(
+        "orderDetail.orderId.updated" + order.getId(),
+        true
+);
 }
 @KafkaListener(topics = "Inventory-event",groupId = "order-group-v3", containerFactory = "InventorykafkaListenerContainerFactory")
 // for clearing cart or sending mail to user
@@ -229,6 +293,15 @@ public void OrderPlacedOrNot(InventoryEvent event){
         order.setStatus("Cancelled");
     }
     orderRepo.save(order);
+    redisService.set(
+        "orderHistory.userId.updated" + order.getUserId(),
+        true
+);
+
+redisService.set(
+        "orderDetail.orderId.updated" + order.getId(),
+        true
+);
 }
 
     

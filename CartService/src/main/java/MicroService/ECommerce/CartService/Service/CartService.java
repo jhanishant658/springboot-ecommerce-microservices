@@ -54,23 +54,65 @@ public class CartService {
     }   
     //Get all product of cart  
     public List<CartProduct> getProductsByCartId() {
-        Long cartId = userContext.getUserId();
-      if(redisService.get("cart.cartProducts." + cartId) != null){
-        log.info("Retrieved products for cart ID {} from Redis cache", cartId);
-        return (List<CartProduct>) redisService.get("cart.cartProducts." + cartId);
-      }
-        Cart cart = cartRepo.findById(cartId).orElse(null);
-        if (cart != null) {
-           List<Long> productIds = cart.getProducts().stream()
-                    .map(Product::getId)
-                    .toList();
-            List<CartProduct> cartProducts = productService.getProductsByIds(productIds);
-            redisService.set("cart.cartProducts." + cartId, cartProducts);
-            log.info("Retrieved products for cart ID {}: {}", cartId, cartProducts);
-            return cartProducts;
-        }
-        return null;
+
+    Long cartId = userContext.getUserId();
+
+    List<CartProduct> cachedProduct =
+          ( List<CartProduct>) redisService.get("cart.cartProducts." + cartId);
+
+    Boolean cachedProductUpdated = null;
+
+    if (cachedProduct != null) {
+        cachedProductUpdated =
+                (Boolean) redisService.get(
+                        "cart.cartProducts.updated" + cartId
+                );
     }
+
+    if (cachedProduct != null &&
+        Boolean.FALSE.equals(cachedProductUpdated)) {
+
+        log.info(
+                "Retrieved products for cart ID {} from Redis cache",
+                cartId
+        );
+
+        return cachedProduct;
+    }
+
+    Cart cart = cartRepo.findById(cartId).orElse(null);
+
+    if (cart != null) {
+
+        List<Long> productIds = cart.getProducts()
+                .stream()
+                .map(Product::getId)
+                .toList();
+
+        List<CartProduct> cartProducts =
+                productService.getProductsByIds(productIds);
+
+        redisService.set(
+                "cart.cartProducts." + cartId,
+                cartProducts
+        );
+
+        redisService.set(
+                "cart.cartProducts.updated" + cartId,
+                false
+        );
+
+        log.info(
+                "Retrieved products for cart ID {}: {}",
+                cartId,
+                cartProducts
+        );
+
+        return cartProducts;
+    }
+
+    return null;
+}
     // add product to cart if it exist else create new cart with product
     @Transactional
     public Cart addProductToCart( Product product) {
@@ -81,6 +123,7 @@ public class CartService {
             List<Product> products = cart.getProducts();
             if(!products.contains(product)) {
                 products.add(product);
+            redisService.set("cart.cartProducts.updated" + cartId, true);
             }
             else {
                 log.info("Product already in cart : {} ", product);
@@ -101,6 +144,7 @@ public class CartService {
         Cart cart = cartRepo.findById(cartId).orElse(null);
         if (cart != null) {
             cart.setProducts(product);
+        redisService.set("cart.cartProducts.updated" + cartId, true);
             return cartRepo.save(cart);
         }
         log.warn("there is no cart for this id : {}",cartId);
@@ -121,10 +165,12 @@ public class CartService {
            log.warn("there is no cart for this id : {}",cartId);
            return ; 
         }
-        if(redisService.get("cart.cartProducts." + cartId) != null){
+        
             redisService.delete("cart.cartProducts." + cartId);
+            redisService.delete("cart.cartProducts.updated" + cartId);
+            
             log.info("deleted cart products from redis for cart id : {}",cartId);
-        }
+        
         
         if (!cart.getProducts().isEmpty()) {
             cart.setProducts(new ArrayList<>());
