@@ -2,10 +2,11 @@ package MicroService.ECommerce.NotificationService.Listener;
 
 import MicroService.ECommerce.NotificationService.Dto.NotificationDtos;
 import MicroService.ECommerce.NotificationService.Repository.NotificationRepository;
+import MicroService.ECommerce.NotificationService.Repository.UserRepositoy;
 import MicroService.ECommerce.NotificationService.Service.NotificationService;
 import MicroService.ECommerce.NotificationService.Events.ProductEvent;
 import MicroService.ECommerce.NotificationService.Model.Notification;
-import MicroService.ECommerce.NotificationService.Dto.UserDetail;
+import MicroService.ECommerce.NotificationService.Model.Users;
 import lombok.AllArgsConstructor;
 import java.util.List;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -18,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ProductEventListner{
     private final NotificationService notificationService;
     private final NotificationRepository notificationRepository;
-
+    private final UserRepositoy userRepository ; 
       @KafkaListener(topics = "cart-event", groupId = "notification-group-v3", containerFactory = "productKafkaListenerContainerFactory")
       public void consumeProductEvent(ProductEvent productEvent) {
           log.info("Received Product Event: {}", productEvent);
@@ -27,11 +28,11 @@ public class ProductEventListner{
               return;
           }
           // Handle the product event (e.g., send notification)
-          List<UserDetail> userDetails = notificationRepository.findAllUserDetails();
+          List<Users> user = userRepository.findAll();
           String message = "There is a new Product with ID: " + productEvent.productId() + " and Stock: " + productEvent.stock() + " has been created. please check it out.";
           String subject = "New Product Created";
-                for(UserDetail userDetail: userDetails){
-                    NotificationDtos.NotificationRequest notificationRequest = new NotificationDtos.NotificationRequest(userDetail.userId(), userDetail.email(), Notification.Channel.EMAIL, subject, message);
+                for(Users userDetail: user){
+                    NotificationDtos.NotificationRequest notificationRequest = new NotificationDtos.NotificationRequest(userDetail.getUserId(), userDetail.getEmail(), Notification.Channel.EMAIL, subject, message);
                     notificationService.send(notificationRequest);
                 }
       }

@@ -2,7 +2,10 @@ package MicroService.ECommerce.NotificationService.Listener;
 import MicroService.ECommerce.NotificationService.Dto.NotificationDtos;
 import MicroService.ECommerce.NotificationService.Dto.NotificationDtos.UserEvent;
 import MicroService.ECommerce.NotificationService.Model.Notification;
+import MicroService.ECommerce.NotificationService.Model.Users;
+import MicroService.ECommerce.NotificationService.Repository.UserRepositoy;
 import MicroService.ECommerce.NotificationService.Service.NotificationService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -23,6 +26,7 @@ import org.springframework.stereotype.Component;
 public class UserEventListner {
 
     private final NotificationService notificationService;
+    private final UserRepositoy userRepository ; 
     
    
  public void sendEmailVerification(UserEvent event){
@@ -262,6 +266,10 @@ log.info("Received user event: email={}, otp={}",
             </body>
             </html>
             """;
+        Users user = new Users();
+        user.setUserId(event.userId());
+        user.setEmail(recipient);
+        userRepository.save(user);
     notificationService.send(new NotificationDtos.NotificationRequest(
             event.userId(),
             recipient,

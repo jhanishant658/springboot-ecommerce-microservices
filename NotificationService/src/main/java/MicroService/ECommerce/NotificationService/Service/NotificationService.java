@@ -61,4 +61,9 @@ if(request.userId()!=0L){
                  notification.getSentAt(), notification.getStatus(),
                 notification.getErrorMessage());
     }
+    public String deleteAllNotifications(){
+        Long userId = userContext.getUserId();
+        notificationRepository.deleteNotificationsByUserId(userId);
+        return "notifications deleted successfully";
+    }
 }
