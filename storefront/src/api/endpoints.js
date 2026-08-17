@@ -59,6 +59,7 @@ export const ENDPOINTS = {
 
   // ---- NotificationService (needs auth header) ----
   myNotifications: { method: "GET", path: "/api/v1/notifications/users" }, // -> NotificationResponse[]
+  deleteMyNotifications: { method: "DELETE", path: "/api/v1/notifications/users" }, // clears all notifications for the logged-in user
 };
 
 /**

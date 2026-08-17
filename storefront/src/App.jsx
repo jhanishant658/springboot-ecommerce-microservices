@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Routes, Route, useNavigate, useParams, useLocation, Navigate } from "react-router-dom";
 import { ThemeProvider, useTheme } from "./theme/ThemeContext";
+import { ToastProvider, useToast } from "./theme/ToastContext";
 import TopNav from "./components/layout/TopNav";
 
 import SignupForm from "./components/auth/SignupForm";
@@ -35,6 +36,7 @@ const EMPTY_PAGE = { content: [], number: 0, totalPages: 1 };
 function AppInner() {
   const { t } = useTheme();
   const navigate = useNavigate();
+  const toast = useToast();
 
   // ---- auth ----
   const [user, setUser] = useState(() => {
@@ -97,21 +99,32 @@ function AppInner() {
       .signup(form)
       .then((ok) => {
         if (ok) {
+          toast.success("Account created — enter the OTP to verify.");
           setPendingUserName(form.userName);
           navigate("/verify-otp");
         } else {
           setAuthError("Signup failed — try a different username/email.");
+          toast.error("Signup failed — try a different username/email.");
         }
       })
-      .catch(() => setAuthError("Signup failed. Please try again."));
+      .catch(() => {
+        setAuthError("Signup failed. Please try again.");
+        toast.error("Signup failed. Please try again.");
+      });
   };
 
   const handleVerifyOtp = (otp) => {
     setAuthError("");
     authApi
       .verifyOtp(pendingUserName, otp)
-      .then(() => navigate("/login"))
-      .catch(() => setAuthError("Invalid or expired code."));
+      .then(() => {
+        toast.success("Verified! You can log in now.");
+        navigate("/login");
+      })
+      .catch(() => {
+        setAuthError("Invalid or expired code.");
+        toast.error("Invalid or expired code.");
+      });
   };
 
   const handleLogin = (form) => {
@@ -121,9 +134,13 @@ function AppInner() {
       .then(({ token }) => {
         localStorage.setItem("token", token);
         setUser(decodeJwt(token));
+        toast.success("Logged in successfully.");
         navigate("/");
       })
-      .catch(() => setAuthError("Invalid email or password."));
+      .catch(() => {
+        setAuthError("Invalid email or password.");
+        toast.error("Invalid email or password.");
+      });
   };
 
   const handleForgotPassword = (form) => {
@@ -134,10 +151,14 @@ function AppInner() {
         // Backend's LoginRequest only carries email/password, but OTP
         // verification needs a userName — fetch it via profile lookup
         // if you have one, or update the backend to key OTPs by email.
+        toast.success("Reset code sent — check your email.");
         setPendingUserName(form.email);
         navigate("/verify-otp");
       })
-      .catch(() => setAuthError("Couldn't start password reset."));
+      .catch(() => {
+        setAuthError("Couldn't start password reset.");
+        toast.error("Couldn't start password reset.");
+      });
   };
 
   const handleLogout = () => {
@@ -149,6 +170,7 @@ function AppInner() {
     setWallet({ id: null, balance: 0 });
     setPayments([]);
     setNotifications([]);
+    toast.info("Logged out.");
     navigate("/");
   };
 
@@ -206,70 +228,120 @@ function AppInner() {
   const addToCart = (product, qty = 1) => {
     if (!user) return navigate("/login");
     const price = product.discountPrice ?? product.price;
-    cartApi.addToCart(product.id, qty, price).then((cart) => {
-      setCartQuantities(Object.fromEntries((cart.products ?? []).map((p) => [p.id, p.quantity])));
-      loadCart();
-    });
+    cartApi
+      .addToCart(product.id, qty, price)
+      .then((cart) => {
+        setCartQuantities(Object.fromEntries((cart.products ?? []).map((p) => [p.id, p.quantity])));
+        loadCart();
+        toast.success(`Added "${product.name ?? "item"}" to cart.`);
+      })
+      .catch(() => toast.error("Couldn't add that to your cart."));
   };
 
   const updateCartQuantity = (id, quantity) => {
     const products = cartItems.map((i) => ({ id: i.id, quantity: i.id === id ? quantity : i.quantity, price: i.discountPrice ?? i.price }));
-    cartApi.updateCart(products).then((cart) => {
-      setCartQuantities(Object.fromEntries((cart.products ?? []).map((p) => [p.id, p.quantity])));
-    });
+    cartApi
+      .updateCart(products)
+      .then((cart) => {
+        setCartQuantities(Object.fromEntries((cart.products ?? []).map((p) => [p.id, p.quantity])));
+      })
+      .catch(() => toast.error("Couldn't update cart quantity."));
   };
 
   const removeFromCart = (id) => {
     const products = cartItems.filter((i) => i.id !== id).map((i) => ({ id: i.id, quantity: i.quantity, price: i.discountPrice ?? i.price }));
-    cartApi.updateCart(products).then(() => loadCart());
+    cartApi
+      .updateCart(products)
+      .then(() => {
+        loadCart();
+        toast.info("Removed from cart.");
+      })
+      .catch(() => toast.error("Couldn't remove that item."));
   };
 
   // ---------- checkout ----------
   const handleCheckout = () => {
     if (!user) return navigate("/login");
-    ordersApi.placeOrder().then((order) => {
-      setActiveOrder(order);
-      setCartProducts([]);
-      setCartQuantities({});
-      ordersApi.getOrderHistory().then(setOrders).catch(() => {});
-      navigate("/order-confirm");
-    });
+    ordersApi
+      .placeOrder()
+      .then((order) => {
+        setActiveOrder(order);
+        setCartProducts([]);
+        setCartQuantities({});
+        ordersApi.getOrderHistory().then(setOrders).catch(() => {});
+        toast.success("Order placed!");
+        navigate("/order-confirm");
+      })
+      .catch(() => toast.error("Checkout failed. Please try again."));
   };
 
   const handleUpdateOrderStatus = (orderId, status) => {
-    ordersApi.updateOrderStatus(orderId, status).then(() => {
-      setOrders((os) => os.map((o) => (o.id === Number(orderId) ? { ...o, status } : o)));
-    });
+    ordersApi
+      .updateOrderStatus(orderId, status)
+      .then(() => {
+        setOrders((os) => os.map((o) => (o.id === Number(orderId) ? { ...o, status } : o)));
+        toast.success(`Order status updated to ${status}.`);
+      })
+      .catch(() => toast.error("Couldn't update order status."));
   };
 
   // ---------- wallet ----------
   const handleTopUp = (amount) => {
-    walletApi.topUpWallet(amount).then(setWallet);
-    walletApi.getPaymentHistory().then(setPayments);
+    walletApi
+      .topUpWallet(amount)
+      .then((w) => {
+        setWallet(w);
+        walletApi.getPaymentHistory().then(setPayments).catch(() => {});
+        toast.success(`Wallet topped up successfully.`);
+      })
+      .catch(() => toast.error("Top-up failed. Please try again."));
   };
 
   // ---------- admin product CRUD ----------
   const refreshCurrentProductPage = () => handlePageChange(productsPage.number ?? 0);
 
   const handleCreateProduct = (payload) => {
-    productsApi.createProduct(payload).then(() => {
-      refreshCurrentProductPage();
-      navigate("/");
-    });
+    productsApi
+      .createProduct(payload)
+      .then(() => {
+        refreshCurrentProductPage();
+        toast.success("Product created.");
+        navigate("/");
+      })
+      .catch(() => toast.error("Couldn't create the product."));
   };
 
   const handleUpdateProduct = (payload) => {
-    productsApi.updateProduct(payload.id, payload).then(() => {
-      refreshCurrentProductPage();
-      navigate("/");
-    });
+    productsApi
+      .updateProduct(payload.id, payload)
+      .then(() => {
+        refreshCurrentProductPage();
+        toast.success("Product updated.");
+        navigate("/");
+      })
+      .catch(() => toast.error("Couldn't update the product."));
   };
 
   const handleDeleteProduct = (product) => {
-    productsApi.deleteProduct(product.id).then(() => {
-      refreshCurrentProductPage();
-      navigate("/");
-    });
+    productsApi
+      .deleteProduct(product.id)
+      .then(() => {
+        refreshCurrentProductPage();
+        toast.success("Product deleted.");
+        navigate("/");
+      })
+      .catch(() => toast.error("Couldn't delete the product."));
+  };
+
+  // ---------- notifications ----------
+  const handleClearNotifications = () => {
+    notificationsApi
+      .deleteMyNotifications()
+      .then(() => {
+        setNotifications([]);
+        toast.success("All notifications cleared.");
+      })
+      .catch(() => toast.error("Couldn't clear notifications."));
   };
 
   return (
@@ -345,7 +417,10 @@ function AppInner() {
         <Route path="/orders/:id" element={<OrderDetailRoute onUpdateStatus={isAdmin ? handleUpdateOrderStatus : undefined} />} />
 
         <Route path="/wallet" element={<WalletPage wallet={wallet} payments={payments} onTopUp={handleTopUp} />} />
-        <Route path="/notifications" element={<NotificationList notifications={notifications} />} />
+        <Route
+          path="/notifications"
+          element={<NotificationList notifications={notifications} onClearAll={handleClearNotifications} />}
+        />
       </Routes>
     </div>
   );
@@ -401,7 +476,9 @@ function OrderDetailRoute({ onUpdateStatus }) {
 export default function App() {
   return (
     <ThemeProvider>
-      <AppInner />
+      <ToastProvider>
+        <AppInner />
+      </ToastProvider>
     </ThemeProvider>
   );
 }
