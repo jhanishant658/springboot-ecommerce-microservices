@@ -60,6 +60,7 @@ Same process will be aplicable for forget password password will changed **after
 | `cart-event` | Cart Service | Order Service | Cart snapshot (products + computed total) sent back to Order after `ORDER_PENDING` |
 | `payment-event` | Payment Service | Order Service | Payment success/failure result |
 | `Inventory-event` | Inventory Service | Order Service | Stock reservation success/failure result |
+| `Product-event`   | Product Service   | Notification Service  | When new product added it will send notifications to all users |
 
 All Kafka connections use SSL client-cert auth (PKCS12 keystore + JKS truststore) against a managed Aiven Kafka cluster.
 
@@ -71,10 +72,10 @@ All Kafka connections use SSL client-cert auth (PKCS12 keystore + JKS truststore
 |---|---|---|---|
 | **Service Registry** | `8761` | – | Eureka server for service discovery |
 | **API Gateway** | `8080` | – | Spring Cloud Gateway — routes `/api/v1/**` to the right service via `lb://` |
-| **User Service** | `8087` | `user-db` + Redis | Signup, OTP verification, login (JWT issuance), profile CRUD |
-| **Product Service** | `8081`| `product-db` | Product catalog, category browsing, pagination, bulk product lookup for Cart/Order |
-| **Cart Service** | `8083` | `cart-db` | Add/update/fetch cart items, builds order snapshot, clears cart post-order |
-| **Order Service** | `8082` | `order-db` | Orchestrates the saga, order history, order status/detail lookup |
+| **User Service** | `8087` | `user-db` + `Redis` | Signup, OTP verification, login (JWT issuance), profile CRUD |
+| **Product Service** | `8081`| `product-db`+`Redis` | Product catalog, category browsing, pagination, bulk product lookup for Cart/Order |
+| **Cart Service** | `8083` | `cart-db` + `Redis` | Add/update/fetch cart items, builds order snapshot, clears cart post-order |
+| **Order Service** | `8082` | `order-db` + `Redis` | Orchestrates the saga, order history, order status/detail lookup |
 | **Payment Service** | `8084` | `payment-db` | Internal wallet ledger — top-up, debit on payment, credit on refund |
 | **Inventory Service** | `8085` | `inventory-db` | Stock levels per product, decrement on order, restock endpoint |
 | **Notification Service** | `8086` | `notification-db` | Consumes user/order events, sends transactional emails via SMTP |
@@ -154,7 +155,15 @@ GET    /api/v1/payments/{userId}
 ```
 POST   /api/v1/stocks               # increase stock
 ```
+**Notification Service** - `/api/v1/notifications`
+```
+GET  /api/v1/notifications/users    # Get all notifications
 
+```
+```
+DELETE /api/v1/notifications/users  # Delete all notifications
+
+```
 ---
 
 ## Running Locally

@@ -7,7 +7,7 @@ import MicroService.ECommerce.NotificationService.Security.UserContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.List;
 
@@ -61,9 +61,11 @@ if(request.userId()!=0L){
                  notification.getSentAt(), notification.getStatus(),
                 notification.getErrorMessage());
     }
+    @Transactional
     public String deleteAllNotifications(){
         Long userId = userContext.getUserId();
-        notificationRepository.deleteNotificationsByUserId(userId);
+        
+        notificationRepository.deleteByUserId(userId);
         return "notifications deleted successfully";
     }
 }

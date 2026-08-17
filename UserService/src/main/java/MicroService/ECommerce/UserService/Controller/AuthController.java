@@ -44,7 +44,7 @@ public class AuthController {
     public String health() {
         return "user-service is running";
     }
-    @GetMapping("/verifyUser")
+    @PostMapping("/verifyUser")
     public String verifyUser(@RequestBody UserDto.otpVerification req) {
         return userService.verifyUser(req.userName() , req.otp());
     }

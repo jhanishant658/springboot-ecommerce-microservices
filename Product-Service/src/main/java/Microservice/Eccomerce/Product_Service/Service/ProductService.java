@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import Microservice.Eccomerce.Product_Service.Event.ProductEvent;
 import Microservice.Eccomerce.Product_Service.ClientRequest.CartProduct;
 import Microservice.Eccomerce.Product_Service.Entity.Product;
@@ -50,8 +51,11 @@ public class ProductService {
             return savedProduct;
         }
         
-        public String saveAllProducts(@NonNull  List<Product> products) {
-                productRepo.saveAll(products);
+        @Transactional
+        public String saveAllProducts(@NonNull  List<CreateProductRequest> products) {
+                for(CreateProductRequest product :products){
+                    saveProduct(product);
+                }
                 return "Products saved successfully";
         }
         public Page<Product> findByCategory(String category , int page){

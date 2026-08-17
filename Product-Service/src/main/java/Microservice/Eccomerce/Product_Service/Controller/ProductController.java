@@ -41,7 +41,7 @@ public class ProductController {
         return ResponseEntity.ok(savedProduct);
     }
     @PostMapping("saveAll")
-    ResponseEntity<String> saveAllProducts(@RequestBody @NonNull List<Product> products) {
+    ResponseEntity<String> saveAllProducts(@RequestBody @NonNull List<CreateProductRequest> products) {
         String response = productService.saveAllProducts(products);
         return ResponseEntity.ok(response);
     }

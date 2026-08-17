@@ -15,7 +15,10 @@ export const login = (payload) =>
  */
 export const verifyOtp = (userName, otp) =>
   client
-    .request({ method: "get", url: "/api/v1/user/verifyUser", data: { userName, otp: Number(otp) } })
+    .post("/api/v1/user/verifyUser", {
+      userName,
+      otp: Number(otp)
+    })
     .then((r) => r.data);
 
 /** POST /api/v1/user/auth/forgetPassword -> string message */

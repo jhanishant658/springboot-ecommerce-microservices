@@ -21,11 +21,12 @@ export default function OtpForm({ userName, onSubmit, onResend, error }) {
       </p>
       <Input
         label="One-time code"
+        type="text"
         value={otp}
         onChange={(e) => setOtp(e.target.value)}
         placeholder="0000"
         maxLength={4}
-        className="text-center font-mono text-2xl tracking-[0.5em]"
+       className="text-center font-mono text-2xl tracking-[0.5em] !text-black !bg-white"
       />
       <Button className="w-full" onClick={() => onSubmit(otp)} disabled={otp.length < 4}>
         Verify & continue
