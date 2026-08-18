@@ -6,13 +6,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+import MicroService.ECommerce.OrderService.Request.PlaceOrderRequest;
 import MicroService.ECommerce.OrderService.Model.Order;
-
-import MicroService.ECommerce.OrderService.Service.OrderService;
 import MicroService.ECommerce.OrderService.Res.OrderDetail;
+import MicroService.ECommerce.OrderService.Service.OrderService;
 import lombok.AllArgsConstructor;
 
 /**
@@ -40,5 +40,8 @@ public class OrderController {
    public OrderDetail getOrderById(@PathVariable long orderId) {
        return orderService.getOrderById(orderId);
    }
-    
+   @PostMapping("/directOrder")
+   public String directPlaceOrder(@RequestBody PlaceOrderRequest req){
+    return orderService.directPlaceOrder(req);
+   }
 }

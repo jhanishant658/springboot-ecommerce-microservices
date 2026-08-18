@@ -197,9 +197,9 @@ public void PlaceOrderFromCart(CartEvent event){
     // take data from cart 
   log.info("placing the order with actual data");
        
-       PlaceOrderRequest req = event.placeOrderReq();
-       Order order =  new Order();
-        order.setUserId(req.getUserId());
+    PlaceOrderRequest req = event.placeOrderReq();
+    Order order =  new Order();
+    order.setUserId(req.getUserId());
     order.setProducts(req.getProducts());
     order.setTotalAmount(req.getTotalAmount());
     order.setStatus("Created");
@@ -303,6 +303,31 @@ redisService.set(
         true
 );
 }
-
+public String directPlaceOrder(PlaceOrderRequest req){
+   Order order =  new Order();
+   long userId = userContext.getUserId();
+   String email = userContext.getEmail();
+    order.setUserId(userId);
+    order.setProducts(req.getProducts());
+    order.setTotalAmount(req.getTotalAmount());
+    order.setStatus("Created");
+    order.setDate(java.time.LocalDateTime.now());
+    orderRepo.save(order);
+    redisService.set("orderHistory.userId.updated"+order.getUserId() , true);
+    
+     OrderEvents paymentEvent = new OrderEvents(
+      order.getId() ,
+      order.getUserId(),
+      email,
+      EventType.PAYMENT_PENDING,
+      order.getStatus(),
+      order.getDate(),
+      BigDecimal.valueOf(order.getTotalAmount()),
+      null
+     );
+     //say payment service to pay 
+     kafkaTemplate.send("order-placed",paymentEvent);
+     return "order placed successfully";
+}
     
 }
