@@ -59,7 +59,7 @@ public class ProductService {
                 return "Products saved successfully";
         }
         public Page<Product> findByCategory(String category , int page){
-        Pageable pageable = PageRequest.of(page, 10);
+        Pageable pageable = PageRequest.of(page, 8);
         return productRepo.findByCategory(category, pageable);
         }
         public List<CartProduct> getCartProducts(@NonNull List<Long> productIds) {
@@ -75,22 +75,21 @@ public class ProductService {
                         p.getThumbnail()
                 )).toList();
         }
-        public Page<Product> getAllProducts(int page, int size) {
+    public Page<Product> getAllProducts(int page, int size) {
 
     Pageable pageable = PageRequest.of(page, size);
 
     String key = "allProductsPage" + page + "Size" + size;
 
-    List<Product> cachedProducts =
-            redisService.get(key, List.class);
+    Page<Product> cachedPage = redisService.get(key, Page.class);
 
-    if (cachedProducts != null) {
-        return new PageImpl<>(cachedProducts, pageable, cachedProducts.size());
+    if (cachedPage != null) {
+        return cachedPage;
     }
 
     Page<Product> products = productRepo.findAll(pageable);
 
-    redisService.set(key, products.getContent());
+    redisService.set(key, products);
 
     return products;
 }
@@ -108,12 +107,12 @@ public class ProductService {
         }
 
         public Page<Product> searchProducts(String keyword, int page) {
-            Pageable pageable = PageRequest.of(page, 10);
+            Pageable pageable = PageRequest.of(page, 8);
             return productRepo.findByTitleContainingIgnoreCase(keyword, pageable);
         }
 
         public Page<Product> filterByPriceRange(String keyword, double min, double max, int page, boolean lowToHigh) {
-            Pageable pageable = PageRequest.of(page, 10);
+            Pageable pageable = PageRequest.of(page, 8);
             if (lowToHigh) {
                 
                 return productRepo.findByCategoryAndPriceBetweenOrderByPriceAsc(keyword, min, max, pageable);

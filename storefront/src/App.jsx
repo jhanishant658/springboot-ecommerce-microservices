@@ -237,6 +237,13 @@ function AppInner() {
       })
       .catch(() => toast.error("Couldn't add that to your cart."));
   };
+  const directOrder = (product , qty) => {
+     if (!user) return navigate("/login");
+     
+     ordersApi.directOrder(0 , product.id , qty , product.discountPrice).then((order)=>{
+      toast.success(`Order Placed "${product.name ?? "item"}"`);
+     })
+  }
 
   const updateCartQuantity = (id, quantity) => {
     const products = cartItems.map((i) => ({ id: i.id, quantity: i.id === id ? quantity : i.quantity, price: i.discountPrice ?? i.price }));
@@ -379,6 +386,7 @@ function AppInner() {
               onPriceFilter={handlePriceFilter}
               onResetPriceFilter={handleResetPriceFilter}
               onAddToCart={addToCart}
+              onDirectOrder ={ordersApi.directOrder}
               onPageChange={handlePageChange}
               isAdmin={isAdmin}
               onEditProduct={(p) => navigate(`/admin/products/${p.id}/edit`)}
@@ -386,7 +394,18 @@ function AppInner() {
             />
           }
         />
-        <Route path="/products/:id" element={<ProductDetailRoute onAddToCart={(p, q) => { addToCart(p, q); navigate("/cart"); }} />} />
+       <Route
+  path="/products/:id"
+  element={
+    <ProductDetailRoute
+      onAddToCart={(p, q) => {
+        addToCart(p, q);
+        navigate("/cart");
+      }}
+      onDirectOrder={directOrder}
+    />
+  }
+/>
         <Route path="/admin/products/new" element={<ProductForm onSubmit={handleCreateProduct} />} />
         <Route path="/admin/products/:id/edit" element={<EditProductRoute onSubmit={handleUpdateProduct} onDelete={handleDeleteProduct} />} />
 
@@ -432,7 +451,7 @@ function ConditionalNav(props) {
   return <TopNav {...props} />;
 }
 
-function ProductDetailRoute({ onAddToCart }) {
+function ProductDetailRoute({ onAddToCart,onDirectOrder}) {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [notFound, setNotFound] = useState(false);
@@ -446,7 +465,7 @@ function ProductDetailRoute({ onAddToCart }) {
 
   if (notFound) return <Navigate to="/" replace />;
   if (!product) return null;
-  return <ProductDetail product={product} backTo="/" onAddToCart={onAddToCart} />;
+  return <ProductDetail product={product} backTo="/" onAddToCart={onAddToCart} onDirectOrder={onDirectOrder} />;
 }
 
 function EditProductRoute({ onSubmit, onDelete }) {

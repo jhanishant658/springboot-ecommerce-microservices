@@ -51,6 +51,7 @@ export const ENDPOINTS = {
   orderHistory: { method: "GET", path: "/api/v1/order/orderHistory" },  // -> Order[]
   orderDetail: { method: "GET", path: "/api/v1/order/getOrderDetails/:orderId" }, // -> OrderDetail
   updateOrderStatus: { method: "PATCH", path: "/api/v1/order/updateOrderStatus/:orderId/:status" },
+  directPlaceOrder: { method: "POST", path: "/api/v1/order/directOrder" },
 
   // ---- PaymentService (needs auth header) ----
   getWallet: { method: "GET", path: "/api/v1/wallets" },                // -> WalletResponse

@@ -13,3 +13,20 @@ export const getOrderDetail = (orderId) =>
 /** PATCH /api/v1/order/updateOrderStatus/{orderId}/{status} -> string message */
 export const updateOrderStatus = (orderId, status) =>
   client.patch(`/api/v1/order/updateOrderStatus/${orderId}/${status}`).then((r) => r.data);
+export const directOrder = (userId, productId, qty, price) => {
+  const data = {
+    userId: userId,
+    products: [
+      {
+        id: productId,
+        quantity: qty
+      }
+    ],
+    totalAmount: price * qty
+  };
+
+  return client
+    .post("/api/v1/order/directOrder", data)
+    .then((r) => r.data);
+};
+  
